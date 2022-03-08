@@ -1,0 +1,86 @@
+[tool.poetry]
+authors = ["Chris Gregory <christopher.b.gregory@gmail.com>"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
+]
+description = "Graph contraction prediction"
+keywords = [
+  "graph",
+  "neural",
+  "networks",
+  "contraction",
+  "flood",
+  "fill",
+  "color",
+]
+license = 'Apache Software License'
+name = "contraction"
+readme = "README.md"
+repository = "https://github.com/gregorybchris/contraction"
+version = "0.1.0"
+
+[tool.poetry.dependencies]
+python = ">=3.10"
+networkx = "^2.7.1"
+
+[tool.poetry.dev-dependencies]
+flake8 = "^4.0.1"
+mypy = "^0.910"
+pylint = "^2.12.1"
+pyproject-flake8 = "^0.0.1a2"
+pytest = "^6.2.5"
+pytest-cov = "^3.0.0"
+pytest-forked = "^1.3.0"
+pytest-xdist = "^2.4.0"
+semver = "^2.13.0"
+types-setuptools = "^57.4.2"
+yapf = "^0.31.0"
+
+[tool.poetry.extras]
+visualization = ["matplotlib"]
+
+[tool.poetry.scripts]
+ctn = "contraction._cli.main:run"
+
+[build-system]
+build-backend = "poetry.core.masonry.api"
+requires = ["poetry-core>=1.0.0"]
+
+[tool.flake8]
+ignore = ""           # Required to disable default ignores
+max-line-length = 119
+
+[tool.mypy]
+disallow_incomplete_defs = true
+disallow_untyped_calls = true
+disallow_untyped_defs = true
+ignore_missing_imports = true
+plugins = ["numpy.typing.mypy_plugin"]
+
+[tool.pylint.basic]
+good-names = ["G"]
+max-args = 7
+max-locals = 25
+notes = ["FIXME"]
+
+[tool.pylint.format]
+max-line-length = 119
+
+[tool.pylint.messages_control]
+disable = [
+  "logging-fstring-interpolation", # W1203
+  "unspecified-encoding",          # W1514
+  "missing-docstring",             # C0114, C0115, C0116
+  "wrong-import-order",            # C0411
+  "no-self-use",                   # R0201
+  "duplicate-code",                # R0801
+  "too-few-public-methods",        # R0903
+]
+
+[tool.yapf]
+based_on_style = "pep8"
+column_limit = 119
+indent_width = 4
