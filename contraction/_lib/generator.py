@@ -1,14 +1,17 @@
+import json
 import random
+from pathlib import Path
+from typing import Tuple
 
 import networkx as nx
 
 from contraction._lib.color import Color
 
 
-def _get_color() -> Color:
+def _get_color() -> str:
     colors = [color for color in Color]
     pick = random.randint(0, len(Color) - 1)
-    return colors[pick]
+    return colors[pick].value
 
 
 def generate_graph(n_nodes: int, n_edges: int, n_colors: int) -> nx.Graph:
@@ -31,3 +34,22 @@ def generate_graph(n_nodes: int, n_edges: int, n_colors: int) -> nx.Graph:
         G.add_edge(node_name_a, node_name_b)
 
     return G
+
+
+def load_graph(filepath: Path) -> Tuple[nx.Graph, int]:
+    G = nx.Graph()
+    with filepath.open() as f:
+        graph_data = json.load(f)
+        n_contractions = graph_data['contractions']
+
+        for node_data in graph_data['nodes']:
+            name = str(node_data['id'])
+            color = node_data['color']
+            G.add_node(name, color=color)
+
+        for node_data in graph_data['nodes']:
+            name = str(node_data['id'])
+            edges = [(name, str(edge)) for edge in node_data['edges']]
+            G.add_edges_from(edges)
+
+    return G, n_contractions

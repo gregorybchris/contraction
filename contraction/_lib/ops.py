@@ -3,17 +3,20 @@ import networkx as nx
 from contraction._lib.color import Color
 
 
-def contract(G: nx.Graph, name: str, color: Color) -> None:
+def contract(G: nx.Graph, name: str, color: Color, mutate: bool = False) -> nx.Graph:
     if name not in G:
         raise ValueError(f"No node {name} in graph")
 
+    if not mutate:
+        G = G.copy()
+
     # Update contraction root to have new color
-    G.nodes[name]['color'] = color
+    G.nodes[name]['color'] = color.value
 
     nodes_to_remove = set()
     edges_to_add = set()
     for child_name in G[name]:
-        if G.nodes[child_name]['color'] == color:
+        if G.nodes[child_name]['color'] == color.value:
             # Keep track of same-colored children for removal
             nodes_to_remove.add(child_name)
 
@@ -27,3 +30,5 @@ def contract(G: nx.Graph, name: str, color: Color) -> None:
 
     # Remove same-colored children
     G.remove_nodes_from(nodes_to_remove)
+
+    return G
