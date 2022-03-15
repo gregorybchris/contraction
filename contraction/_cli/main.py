@@ -31,7 +31,7 @@ def generate(data_dirpath: Path, require_shortest: bool):
             graph_dirpath = data_dirpath / 'training' / f'graph-{graph_id}'
             graph_dirpath.mkdir(exist_ok=True, parents=True)
             start_time = time.time()
-            path = generate_data(
+            solution = generate_data(
                 G,
                 graph_dirpath,
                 max_contractions,
@@ -39,7 +39,7 @@ def generate(data_dirpath: Path, require_shortest: bool):
                 zip_graphs=True,
             )
             end_time = time.time() - start_time
-            print(f"Final path: {[(node, color) for node, color in path]}")
+            print(f"Solution: {[(node, color) for node, color in solution]}")
             print(f"Processed in {end_time}s")
 
 
@@ -52,18 +52,17 @@ def solve(graph_id: str, data_dirpath: Path, require_shortest: bool, display_ste
     graph_filepath = data_dirpath / 'graphs' / f'graph-{graph_id}.json'
     G, max_contractions = load_graph(graph_filepath)
 
-    graph_dirpath = data_dirpath / 'training' / f'graph-{graph_id}'
-    graph_dirpath.mkdir(exist_ok=True, parents=True)
+    solution_dirpath = data_dirpath / 'training' / f'graph-{graph_id}'
+    solution_dirpath.mkdir(exist_ok=True, parents=True)
     start_time = time.time()
-    path = generate_data(G, graph_dirpath, max_contractions, require_shortest=require_shortest, zip_graphs=True)
+    solution = generate_data(G, solution_dirpath, max_contractions, require_shortest=require_shortest, zip_graphs=True)
     end_time = time.time() - start_time
-    print(f"Final path: {[(node, color) for node, color in path]}")
+    print(f"Solution: {[(node, color) for node, color in solution]}")
     print(f"Processed in {end_time}s")
 
     if display_steps:
         display = Display(seed=0, iterations=250)
-        # display.apply_contractions(G, path)
-        display.draw_graph_grid(G, path, title=f"Graph: {graph_id}")
+        display.draw_graph_grid(G, solution, title=f"Graph: {graph_id}")
 
 
 @cli.command()
