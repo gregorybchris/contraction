@@ -1,6 +1,6 @@
 import networkx as nx
 
-from contraction._lib.color import Color
+from contraction._gen.color import Color
 
 
 def contract(G: nx.Graph, name: str, color: Color, mutate: bool = False) -> nx.Graph:

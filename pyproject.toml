@@ -23,8 +23,13 @@ repository = "https://github.com/gregorybchris/contraction"
 version = "0.1.0"
 
 [tool.poetry.dependencies]
-python = ">=3.10"
+python = ">=3.8"
 networkx = "^2.7.1"
+torch_geometric = "^2.0.4"
+torch = "^1.11.0"
+torch-sparse = "^0.6.13"
+torch-scatter = "^2.0.9"
+click = "^8.0.4"
 
 [tool.poetry.dev-dependencies]
 flake8 = "^4.0.1"
@@ -43,7 +48,7 @@ yapf = "^0.31.0"
 visualization = ["matplotlib"]
 
 [tool.poetry.scripts]
-ctn = "contraction._cli.main:run"
+ctn = "contraction._cli.main:cli"
 
 [build-system]
 build-backend = "poetry.core.masonry.api"
