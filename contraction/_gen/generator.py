@@ -7,8 +7,9 @@ import networkx as nx
 from contraction._gen.contraction import Contraction
 from contraction._gen.ops import contract
 # from contraction._gen.ops import get_markov_blanket
-from contraction._gen.ops import get_nodes_by_centrality
-# from contraction._gen.ops import get_nodes_by_degree
+# from contraction._gen.ops import get_nodes_by_centrality
+from contraction._gen.ops import get_nodes_by_degree
+from contraction._gen.ops import get_colors
 
 
 def generate_data(
@@ -36,18 +37,18 @@ def _generate_data(
     if max_contractions is not None and len(graph_colors) > max_contractions + 1:
         return None
 
-    last_contraction_node = parent_path[-1][0] if len(parent_path) > 0 else None
-    # nodes = get_markov_blanket(G, node=last_contraction_node)
-    # nodes = get_nodes_by_centrality(G, last_contraction_node=None)
-    nodes = get_nodes_by_centrality(G, last_contraction_node=last_contraction_node)
-    # nodes = get_nodes_by_degree(G, last_contraction_node=last_contraction_node)
-    # nodes = get_nodes_by_degree(G, last_contraction_node=last_contraction_node)
+    last_contracted_node = parent_path[-1][0] if len(parent_path) > 0 else None
+    # nodes = get_markov_blanket(G, node=last_contracted_node)
+    # nodes = get_nodes_by_centrality(G, markov_root=None)
+    # nodes = get_nodes_by_centrality(G, markov_root=last_contracted_node)
+    # nodes = get_nodes_by_degree(G, markov_root=None)
+    nodes = get_nodes_by_degree(G, markov_root=last_contracted_node)
 
     best_path = None
     for node in nodes:
         # Get colors of node neighbors
-        child_colors = {G.nodes[node_id]['color'] for node_id in G[node]}
-        for color in child_colors:
+        colors = get_colors(G, node, by_frequency=False)
+        for color in colors:
             G_c = contract(G, node, color)
             contraction = node, color
             path = parent_path.copy()

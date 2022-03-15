@@ -35,10 +35,7 @@ def contract(G: nx.Graph, node: str, color: str, mutate: bool = False) -> nx.Gra
     return G
 
 
-def get_markov_blanket(G: nx.Graph, node: Optional[str] = None) -> List[str]:
-    if node is None:
-        return [node for node in G]
-
+def get_markov_blanket(G: nx.Graph, node: str) -> List[str]:
     markov_blanket = set()
     markov_blanket.add(node)
     for child_node in G[node]:
@@ -48,12 +45,19 @@ def get_markov_blanket(G: nx.Graph, node: Optional[str] = None) -> List[str]:
     return list(markov_blanket)
 
 
-def get_nodes_by_centrality(G: nx.Graph, last_contraction_node: Optional[str] = None, power: int = 2):
-    markov_blanket = get_markov_blanket(G, node=last_contraction_node)
+def get_nodes(G: nx.Graph, markov_root: Optional[str] = None) -> List[str]:
+    if markov_root is None:
+        return [node for node in G]
+    else:
+        return get_markov_blanket(G, markov_root)
 
-    scores = dict()
+
+def get_nodes_by_centrality(G: nx.Graph, markov_root: Optional[str] = None, power: int = 2):
+    nodes = get_nodes(G, markov_root=markov_root)
+
+    scores = {}
     queue = Queue()
-    for node in markov_blanket:
+    for node in nodes:
         score = 0
         visited_set = set()
         queue.put((node, 0))
@@ -70,14 +74,26 @@ def get_nodes_by_centrality(G: nx.Graph, last_contraction_node: Optional[str] = 
     return list(sorted_nodes)
 
 
-def get_nodes_by_degree(G: nx.Graph, last_contraction_node: Optional[str] = None):
-    markov_blanket = get_markov_blanket(G, node=last_contraction_node)
+def get_nodes_by_degree(G: nx.Graph, markov_root: Optional[str] = None):
+    nodes = get_nodes(G, markov_root=markov_root)
 
-    scores = [(node, len(G[node])) for node in markov_blanket]
+    scores = [(node, len(G[node])) for node in nodes]
     sorted_scores = sorted(scores, key=lambda x: -x[1])
     sorted_nodes, _ = zip(*sorted_scores)
     return list(sorted_nodes)
 
 
-def get_colors_by_frequency(G: nx.Graph, node: str):
-    pass
+def get_colors(G: nx.Graph, node: str, by_frequency: bool = False) -> List[str]:
+    if not by_frequency:
+        return list({G.nodes[child_node]['color'] for child_node in G[node]})
+
+    frequencies = {}
+    for child_node in G[node]:
+        color = G.nodes[child_node]['color']
+        if color not in frequencies:
+            frequencies[color] = 0
+        frequencies[color] += 1
+
+    sorted_frequencies = sorted(frequencies.items(), key=lambda x: -x[1])
+    sorted_nodes, _ = zip(*sorted_frequencies)
+    return list(sorted_nodes)
