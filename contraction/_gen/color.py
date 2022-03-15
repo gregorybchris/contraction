@@ -9,7 +9,6 @@ class Color(Enum):
     PINK = 'pink'
     PURPLE = 'purple'
     RED = 'red'
-    WHITE = 'white'
     YELLOW = 'yellow'
 
     @classmethod

@@ -97,3 +97,18 @@ def get_colors(G: nx.Graph, node: str, by_frequency: bool = False) -> List[str]:
     sorted_frequencies = sorted(frequencies.items(), key=lambda x: -x[1])
     sorted_nodes, _ = zip(*sorted_frequencies)
     return list(sorted_nodes)
+
+
+def get_n_non_singular_colors(G: nx.Graph):
+    frequencies = {}
+    n_non_singular = 0
+    for _, data in G.nodes(data=True):
+        color = data['color']
+        if color not in frequencies:
+            frequencies[color] = 0
+        frequencies[color] += 1
+
+        if frequencies[color] == 2:
+            n_non_singular += 1
+
+    return n_non_singular

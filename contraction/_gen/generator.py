@@ -10,6 +10,7 @@ from contraction._gen.ops import contract
 # from contraction._gen.ops import get_nodes_by_centrality
 from contraction._gen.ops import get_nodes_by_degree
 from contraction._gen.ops import get_colors
+from contraction._gen.ops import get_n_non_singular_colors
 
 
 def generate_data(
@@ -35,6 +36,11 @@ def _generate_data(
 
     graph_colors = {G.nodes[node_id]['color'] for node_id in G.nodes}
     if max_contractions is not None and len(graph_colors) > max_contractions + 1:
+        return None
+
+    # If the number of colors that have more than one node is greater
+    # than the number of allowed contractions, then there is no solution.
+    if max_contractions is not None and get_n_non_singular_colors(G) > max_contractions:
         return None
 
     last_contracted_node = parent_path[-1][0] if len(parent_path) > 0 else None
