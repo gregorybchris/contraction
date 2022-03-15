@@ -44,14 +44,7 @@ def _generate_data(
             path = parent_path.copy()
             path.append(contraction)
             child_max_contractions = None if max_contractions is None else max_contractions - 1
-            child_path = _generate_data(
-                G_c,
-                graph_dirpath,
-                path,
-                max_contractions=child_max_contractions,
-                require_shortest=require_shortest,
-                zip_graphs=zip_graphs,
-            )
+            child_path = _generate_data(G_c, graph_dirpath, path, child_max_contractions, require_shortest, zip_graphs)
             if child_path is not None:
                 new_path = child_path.copy()
                 new_path.insert(0, (name, Color.from_str(color)))

@@ -6,22 +6,6 @@ from contraction._load.loader import load_graph
 from contraction._gen.generator import generate_data
 from contraction._visual.display import Display
 
-# def run() -> None:
-#     parser = argparse.ArgumentParser()
-#     subparsers = parser.add_subparsers()
-
-#     generate_parser = subparsers.add_parser('generate', help="Generate data", aliases=['gen'])
-#     generate_parser.add_argument('--data', dest='data_dirpath', required=True, help="Data folder.")
-#     generate_parser.set_defaults(func=generate)
-
-#     display_parser = subparsers.add_parser('display', help="Display", aliases=['dis'])
-#     display_parser.add_argument('level', help="Level ID to display.")
-#     generate_parser.add_argument('--data', dest='data_dirpath', required=True, help="Data folder.")
-#     display_parser.add_argument('--solution', help="Display full solution.")
-#     generate_parser.set_defaults(func=display)
-
-#     return parser.parse_args()
-
 
 class ClickPath(click.Path):
     def convert(self, value, param, ctx):
@@ -35,7 +19,8 @@ def cli():
 
 @cli.command()
 @click.option('--data', 'data_dirpath', type=ClickPath(exists=True, file_okay=False, resolve_path=True), required=True)
-def generate(data_dirpath: Path):
+@click.option('--require-shortest/--no-require-shortest', default=False)
+def generate(data_dirpath: Path, require_shortest: bool):
     for group in [1, 2, 3, 4, 5, 6, 7]:
         for level in [1, 2, 3, 4, 5, 6]:
             graph_id = f'{group}-{level}'
@@ -43,10 +28,16 @@ def generate(data_dirpath: Path):
             graph_filepath = data_dirpath / 'graphs' / f'graph-{graph_id}.json'
             G, max_contractions = load_graph(graph_filepath)
 
-            training_dirpath = data_dirpath / 'training' / f'graph-{graph_id}'
-            training_dirpath.mkdir(exist_ok=True, parents=True)
+            graph_dirpath = data_dirpath / 'training' / f'graph-{graph_id}'
+            graph_dirpath.mkdir(exist_ok=True, parents=True)
             start_time = time.time()
-            path = generate_data(G, training_dirpath, max_contractions, require_shortest=False, zip_graphs=True)
+            path = generate_data(
+                G,
+                graph_dirpath,
+                max_contractions,
+                require_shortest=require_shortest,
+                zip_graphs=True,
+            )
             end_time = time.time() - start_time
             print(f"Final path: {[(name, color.value) for name, color in path]}")
             print(f"Processed in {end_time}s")
@@ -70,8 +61,9 @@ def solve(graph_id: str, data_dirpath: Path, require_shortest: bool, display_ste
     print(f"Processed in {end_time}s")
 
     if display_steps:
-        display = Display(seed=0)
-        display.apply_contractions(G, path)
+        display = Display(seed=0, iterations=250)
+        # display.apply_contractions(G, path)
+        display.draw_graph_grid(G, path)
 
 
 @cli.command()
