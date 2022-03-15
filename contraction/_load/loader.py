@@ -11,15 +11,15 @@ def load_graph(filepath: Path) -> Tuple[nx.Graph, int]:
         graph_data = json.load(f)
         n_contractions = graph_data['contractions']
 
-        for node_data in graph_data['nodes']:
-            name = str(node_data['id'])
-            color = node_data['color']
-            id = f"{name}-{color}"
-            G.add_node(name, color=color, id=id)
+        for data in graph_data['nodes']:
+            node = str(data['id'])
+            color = data['color']
+            id = f"{node}-{color}"
+            G.add_node(node, color=color, id=id)
 
-        for node_data in graph_data['nodes']:
-            name = str(node_data['id'])
-            edges = [(name, str(edge)) for edge in node_data['edges']]
+        for data in graph_data['nodes']:
+            node = str(data['id'])
+            edges = [(node, str(edge)) for edge in data['edges']]
             G.add_edges_from(edges)
 
     return G, n_contractions

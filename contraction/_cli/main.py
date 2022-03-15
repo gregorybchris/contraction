@@ -39,7 +39,7 @@ def generate(data_dirpath: Path, require_shortest: bool):
                 zip_graphs=True,
             )
             end_time = time.time() - start_time
-            print(f"Final path: {[(name, color.value) for name, color in path]}")
+            print(f"Final path: {[(node, color) for node, color in path]}")
             print(f"Processed in {end_time}s")
 
 
@@ -57,13 +57,13 @@ def solve(graph_id: str, data_dirpath: Path, require_shortest: bool, display_ste
     start_time = time.time()
     path = generate_data(G, graph_dirpath, max_contractions, require_shortest=require_shortest, zip_graphs=True)
     end_time = time.time() - start_time
-    print(f"Final path: {[(name, color.value) for name, color in path]}")
+    print(f"Final path: {[(node, color) for node, color in path]}")
     print(f"Processed in {end_time}s")
 
     if display_steps:
         display = Display(seed=0, iterations=250)
         # display.apply_contractions(G, path)
-        display.draw_graph_grid(G, path)
+        display.draw_graph_grid(G, path, title=f"Graph: {graph_id}")
 
 
 @cli.command()

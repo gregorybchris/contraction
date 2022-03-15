@@ -21,13 +21,13 @@ def generate_graph(n_nodes: int, n_edges: int, n_colors: int) -> nx.Graph:
 
     G = nx.Graph()
     for node_id in range(n_nodes):
-        node_name = str(node_id)
+        node = str(node_id)
         color = _get_color()
-        G.add_node(node_name, color=color)
+        G.add_node(node, color=color)
 
     for _ in range(n_edges):
-        node_name_a = str(random.randint(0, n_nodes - 1))
-        node_name_b = str(random.randint(0, n_nodes - 1))
-        G.add_edge(node_name_a, node_name_b)
+        node_a = str(random.randint(0, n_nodes - 1))
+        node_b = str(random.randint(0, n_nodes - 1))
+        G.add_edge(node_a, node_b)
 
     return G
