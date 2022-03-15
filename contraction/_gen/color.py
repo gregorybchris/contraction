@@ -16,19 +16,17 @@ class Color(Enum):
         if color == cls.BLACK:
             return '#2c3e50'
         elif color == cls.BLUE:
-            return '#3498db'
+            return '#2980b9'
         elif color == cls.GREEN:
-            return '#2ecc71'
+            return '#27ae60'
         elif color == cls.ORANGE:
             return '#e67e22'
         elif color == cls.PINK:
             return '#ff7979'
         elif color == cls.PURPLE:
-            return '#9b59b6'
+            return '#8e44ad'
         elif color == cls.RED:
             return '#e74c3c'
-        elif color == cls.WHITE:
-            return '#bdc3c7'
         elif color == cls.YELLOW:
             return '#f1c40f'
         else:
