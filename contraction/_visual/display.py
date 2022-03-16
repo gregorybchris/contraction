@@ -102,19 +102,17 @@ class Display:
             raise ValueError("Graph is empty")
 
         highlight_edges = [] if highlight_edges is None else highlight_edges
-        # highlight_nodes = [node for node in G][:2]
-        # highlight_edges = [(highlight_nodes[0], highlight_nodes[1])] if len(G) > 1 else []
 
         nodes = G.nodes(data=True)
         nodes, datas = zip(*nodes)
         colors = [Color.str_to_hex(data['color']) for data in datas]
+
         pos = nx.spring_layout(G, iterations=self._iterations, seed=self._seed, pos=pos)
-        # nx.draw_networkx_edges(G, pos, width=6, alpha=0.4, edge_color='#535c68')
-        # nx.draw_networkx_edges(G, pos, edgelist=highlight_edges, width=6, alpha=0.8, edge_color='#2f3640')
 
         nx.draw_networkx_edges(G, pos, width=4, alpha=0.5, edge_color='#535c68')
         nx.draw_networkx_edges(G, pos, edgelist=highlight_edges, width=6, alpha=0.8, edge_color='#2f3640')
 
         nx.draw_networkx_nodes(G, pos, nodelist=nodes, node_size=400, node_color=colors)
         nx.draw_networkx_labels(G, pos, font_color='white', font_size=10)
+
         return pos
