@@ -6,8 +6,6 @@ import networkx as nx
 
 from contraction._gen.contraction import Contraction
 from contraction._gen.ops import contract
-# from contraction._gen.ops import get_markov_blanket
-# from contraction._gen.ops import get_nodes_by_centrality
 from contraction._gen.ops import get_nodes_by_degree
 from contraction._gen.ops import get_colors
 from contraction._gen.ops import get_n_non_singular_colors
@@ -44,10 +42,6 @@ def _generate_data(
         return None
 
     last_contracted_node = parent_path[-1][0] if len(parent_path) > 0 else None
-    # nodes = get_markov_blanket(G, node=last_contracted_node)
-    # nodes = get_nodes_by_centrality(G, markov_root=None)
-    # nodes = get_nodes_by_centrality(G, markov_root=last_contracted_node)
-    # nodes = get_nodes_by_degree(G, markov_root=None)
     nodes = get_nodes_by_degree(G, markov_root=last_contracted_node)
 
     best_path = None
@@ -60,8 +54,14 @@ def _generate_data(
             path = parent_path.copy()
             path.append(contraction)
             child_max_contractions = None if max_contractions is None else max_contractions - 1
-            child_path = _generate_data(G_c, solution_dirpath, path, child_max_contractions, require_shortest,
-                                        zip_graphs)
+            child_path = _generate_data(
+                G_c,
+                solution_dirpath,
+                path,
+                child_max_contractions,
+                require_shortest,
+                zip_graphs,
+            )
             if child_path is not None:
                 new_path = child_path.copy()
                 new_path.insert(0, (node, color))

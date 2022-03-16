@@ -20,15 +20,18 @@ data = dataset[0].to(device)
 optimizer = torch.optim.Adam(model.parameters(), lr=0.01, weight_decay=5e-4)
 
 model.train()
-for epoch in range(200):
+n_epochs = 200
+for epoch in range(n_epochs):
     optimizer.zero_grad()
-    out = model(data)
-    loss = F.nll_loss(out[data.train_mask], data.y[data.train_mask])
+    y_pred = model(data)
+    loss = F.nll_loss(y_pred[data.train_mask], data.y[data.train_mask])
     loss.backward()
     optimizer.step()
+    # if epoch % 20 == 0:
+    #     print(f"Loss: {loss}")
 
 model.eval()
-pred = model(data).argmax(dim=1)
-correct = (pred[data.test_mask] == data.y[data.test_mask]).sum()
-acc = int(correct) / int(data.test_mask.sum())
-print(f"Accuracy: {acc:.4f}")
+y_pred = model(data).argmax(dim=1)
+n_correct = (y_pred[data.test_mask] == data.y[data.test_mask]).sum()
+accuracy = int(n_correct) / int(data.test_mask.sum())
+print(f"Accuracy: {accuracy:.4f}")

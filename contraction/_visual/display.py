@@ -50,6 +50,13 @@ class Display:
             self.draw_graph(G, title=f"Step {self._figure_count}: {node} -> {color}")
         self.show()
 
+    def _get_highlight_edges(self, G: nx.Graph, node: str, color: str) -> List[Tuple[str, str]]:
+        highlight_edges = []
+        for child_node in G[node]:
+            if G.nodes[child_node]['color'] == color:
+                highlight_edges.append((node, child_node))
+        return highlight_edges
+
     def draw_graph_grid(
         self,
         G: nx.Graph,
@@ -57,7 +64,7 @@ class Display:
         title: Optional[str] = None,
     ) -> None:
         n_contractions = len(contractions)
-        grid_rows = 2
+        grid_rows = 2 if n_contractions > 1 else 1
         grid_cols = math.ceil((n_contractions + 1) / grid_rows)
 
         px = 1 / plt.rcParams['figure.dpi']
@@ -69,16 +76,18 @@ class Display:
         arrow = u"\u279E"
 
         pos = None
+        highlight_edges = None
         for node, color in contractions:
             subplot_id = int(f"{grid_rows}{grid_cols}{self._figure_count + 1}")
             plt.subplot(subplot_id, title=f"Step {self._figure_count + 1}: ({node}) {arrow} {color}")
-            pos = self._draw_graph(G, pos=pos, highlight_edges=None)
+            highlight_edges = self._get_highlight_edges(G, node, color)
+            pos = self._draw_graph(G, pos=pos, highlight_edges=highlight_edges)
             self._figure_count += 1
             G = contract(G, node, color)
 
         subplot_id = int(f"{grid_rows}{grid_cols}{self._figure_count + 1}")
         plt.subplot(subplot_id, title=f"Step {self._figure_count + 1}: Solved")
-        self._draw_graph(G, pos=pos, highlight_edges=None)
+        self._draw_graph(G, pos=pos)
 
         plt.tight_layout()
         self.show()
@@ -100,7 +109,10 @@ class Display:
         nodes, datas = zip(*nodes)
         colors = [Color.str_to_hex(data['color']) for data in datas]
         pos = nx.spring_layout(G, iterations=self._iterations, seed=self._seed, pos=pos)
-        nx.draw_networkx_edges(G, pos, width=6, alpha=0.4, edge_color='#535c68')
+        # nx.draw_networkx_edges(G, pos, width=6, alpha=0.4, edge_color='#535c68')
+        # nx.draw_networkx_edges(G, pos, edgelist=highlight_edges, width=6, alpha=0.8, edge_color='#2f3640')
+
+        nx.draw_networkx_edges(G, pos, width=4, alpha=0.5, edge_color='#535c68')
         nx.draw_networkx_edges(G, pos, edgelist=highlight_edges, width=6, alpha=0.8, edge_color='#2f3640')
 
         nx.draw_networkx_nodes(G, pos, nodelist=nodes, node_size=400, node_color=colors)
