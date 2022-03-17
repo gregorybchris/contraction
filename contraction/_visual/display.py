@@ -10,6 +10,7 @@ from contraction._solve.ops import contract
 
 HAS_MATPLOTLIB = True
 try:
+    import matplotlib
     import matplotlib.pyplot as plt
 except ImportError:
     HAS_MATPLOTLIB = False
@@ -43,13 +44,6 @@ class Display:
 
         plt.show()
 
-    def apply_contractions(self, G: nx.Graph, contractions: List[Contraction]) -> None:
-        self.draw_graph(G, "Step 0: Initial")
-        for node, color in contractions:
-            G = contract(G, node, color)
-            self.draw_graph(G, title=f"Step {self._figure_count}: {node} -> {color}")
-        self.show()
-
     def _get_highlight_edges(self, G: nx.Graph, node: str, color: str) -> List[Tuple[str, str]]:
         highlight_edges = []
         for child_node in G[node]:
@@ -72,6 +66,9 @@ class Display:
         figure.canvas.set_window_title(title)
         figure.tight_layout()
         axes.autoscale_view(tight=True)
+        plt.rc('axes.spines', bottom=False, top=False)
+        plt.rc('axes', edgecolor='#E0E0E0', linewidth=5)
+        plt.rc('axes', titlecolor='#404040', titleweight='bold')
 
         arrow = u"\u279E"
 
@@ -113,6 +110,6 @@ class Display:
         nx.draw_networkx_edges(G, pos, edgelist=highlight_edges, width=6, alpha=0.8, edge_color='#2f3640')
 
         nx.draw_networkx_nodes(G, pos, nodelist=nodes, node_size=400, node_color=colors)
-        nx.draw_networkx_labels(G, pos, font_color='white', font_size=10)
+        nx.draw_networkx_labels(G, pos, font_color='white', font_size=9, font_weight='bold')
 
         return pos
