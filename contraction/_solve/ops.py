@@ -3,8 +3,12 @@ from typing import List, Optional
 
 import networkx as nx
 
+from contraction._solve.contraction import Contraction
 
-def contract(G: nx.Graph, node: str, color: str, mutate: bool = False) -> nx.Graph:
+
+def contract(G: nx.Graph, contraction: Contraction, mutate: bool = False) -> nx.Graph:
+    node, color = contraction
+
     if node not in G:
         raise ValueError(f"No node {node} in graph")
 
@@ -79,7 +83,7 @@ def order_nodes_by_degree(G: nx.Graph, nodes: List[str]) -> List[str]:
     return list(sorted_nodes)
 
 
-def get_colors(G: nx.Graph, node: str, by_frequency: bool = False) -> List[str]:
+def get_neighbor_colors(G: nx.Graph, node: str, by_frequency: bool = False) -> List[str]:
     if not by_frequency:
         return list({G.nodes[child_node]['color'] for child_node in G[node]})
 
@@ -108,3 +112,8 @@ def get_n_non_singular_colors(G: nx.Graph) -> int:
             n_non_singular += 1
 
     return n_non_singular
+
+
+def get_n_graph_colors(G: nx.Graph) -> int:
+    graph_colors = {G.nodes[node_id]['color'] for node_id in G.nodes}
+    return len(graph_colors)

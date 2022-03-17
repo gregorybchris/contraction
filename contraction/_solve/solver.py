@@ -1,10 +1,10 @@
 import json
 from pathlib import Path
-from typing import List, Optional
+from typing import Iterator, List, Optional
 
 import networkx as nx
 
-from contraction._solve.contraction import Contraction, ContractionPath
+from contraction._solve.contraction import Contraction
 from contraction._solve import ops
 
 
@@ -14,46 +14,48 @@ class Solver:
         self._zip_graphs = zip_graphs
 
     def solve(self, G: nx.Graph, graph_id: str, max_contractions: Optional[int] = None) -> Optional[List[Contraction]]:
-        solution = self._solve(G, graph_id, ContractionPath(), max_contractions)
-        return None if solution is None else solution.to_list()
+        solution = self._solve(G, graph_id, max_contractions, None)
+        return None if solution is None else solution
 
     def _solve(
         self,
         G: nx.Graph,
         graph_id: str,
-        path: ContractionPath,
         max_contractions: Optional[int],
-    ) -> Optional[ContractionPath]:
+        last_contraction: Optional[Contraction],
+    ) -> Optional[List[Contraction]]:
         if len(G) == 1:
-            return ContractionPath()
+            return []
 
-        graph_colors = {G.nodes[node_id]['color'] for node_id in G.nodes}
-        if max_contractions is not None and len(graph_colors) > max_contractions + 1:
+        if max_contractions is not None and ops.get_n_graph_colors(G) > max_contractions + 1:
             return None
 
         if max_contractions is not None and ops.get_n_non_singular_colors(G) > max_contractions:
             return None
 
-        last_contracted_node = path[-1][0] if len(path) > 0 else None
-        nodes = ops.get_nodes(G, markov_root=last_contracted_node)
-        nodes = ops.order_nodes_by_degree(G, nodes)
-
-        for node in nodes:
-            # Get colors of node neighbors
-            colors = ops.get_colors(G, node, by_frequency=False)
-            for color in colors:
-                child_graph = ops.contract(G, node, color)
-                child_path = path.push_back((node, color))
-                child_max_contractions = None if max_contractions is None else max_contractions - 1
-                child_solution = self._solve(child_graph, graph_id, child_path, child_max_contractions)
-                if child_solution is not None:
-                    solution = child_solution.push_front((node, color))
-                    self._save_solution(G, graph_id, solution)
-                    return solution
+        for contraction in self._iter_contractions(G, last_contraction):
+            child_graph = ops.contract(G, contraction)
+            child_max_contractions = None if max_contractions is None else max_contractions - 1
+            child_solution = self._solve(child_graph, graph_id, child_max_contractions, contraction)
+            if child_solution is not None:
+                solution = child_solution.copy()
+                solution.insert(0, contraction)
+                self._save_solution(G, graph_id, solution)
+                return solution
 
         return None
 
-    def _save_solution(self, G: nx.Graph, graph_id: str, solution: ContractionPath) -> None:
+    def _iter_contractions(self, G: nx.Graph, last_contraction: Optional[Contraction]) -> Iterator[Contraction]:
+        markov_root = None if last_contraction is None else last_contraction[0]
+        nodes = ops.get_nodes(G, markov_root=markov_root)
+        nodes = ops.order_nodes_by_degree(G, nodes)
+
+        for node in nodes:
+            colors = ops.get_neighbor_colors(G, node)
+            for color in colors:
+                yield node, color
+
+    def _save_solution(self, G: nx.Graph, graph_id: str, solution: List[Contraction]) -> None:
         if self._solutions_dirpath is None:
             return
 

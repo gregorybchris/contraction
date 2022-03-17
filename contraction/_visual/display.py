@@ -44,7 +44,8 @@ class Display:
 
         plt.show()
 
-    def _get_highlight_edges(self, G: nx.Graph, node: str, color: str) -> List[Tuple[str, str]]:
+    def _get_highlight_edges(self, G: nx.Graph, contraction: Contraction) -> List[Tuple[str, str]]:
+        node, color = contraction
         highlight_edges = []
         for child_node in G[node]:
             if G.nodes[child_node]['color'] == color:
@@ -74,13 +75,14 @@ class Display:
 
         pos = None
         highlight_edges = None
-        for node, color in contractions:
+        for contraction in contractions:
+            node, color = contraction
             subplot_id = int(f"{grid_rows}{grid_cols}{self._figure_count + 1}")
             plt.subplot(subplot_id, title=f"Step {self._figure_count + 1}: ({node}) {arrow} {color}")
-            highlight_edges = self._get_highlight_edges(G, node, color)
+            highlight_edges = self._get_highlight_edges(G, contraction)
             pos = self._draw_graph(G, pos=pos, highlight_edges=highlight_edges)
             self._figure_count += 1
-            G = contract(G, node, color)
+            G = contract(G, contraction)
 
         subplot_id = int(f"{grid_rows}{grid_cols}{self._figure_count + 1}")
         plt.subplot(subplot_id, title=f"Step {self._figure_count + 1}: Solved")
