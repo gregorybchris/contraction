@@ -1,5 +1,5 @@
 from queue import Queue
-from typing import List, Optional
+from typing import Iterator, List, Optional
 
 import networkx as nx
 
@@ -83,10 +83,38 @@ def order_nodes_by_degree(G: nx.Graph, nodes: List[str]) -> List[str]:
     return list(sorted_nodes)
 
 
-def get_neighbor_colors(G: nx.Graph, node: str, by_frequency: bool = False) -> List[str]:
-    if not by_frequency:
-        return list({G.nodes[child_node]['color'] for child_node in G[node]})
+def iter_contractions(G: nx.Graph, last_contraction: Optional[Contraction] = None) -> Iterator[Contraction]:
+    markov_root = None if last_contraction is None else last_contraction[0]
+    nodes = get_nodes(G, markov_root=markov_root)
+    nodes = order_nodes_by_centrality(G, nodes)
 
+    for node in nodes:
+        for color in iter_neighbor_colors(G, node):
+            if color != G.nodes[node]['color']:
+                yield node, color
+
+
+def order_contractions_by_graph_size(G: nx.Graph, contractions: List[Contraction]) -> List[Contraction]:
+    contracted_graphs = []
+    for contraction in contractions:
+        G_contracted = contract(G, contraction)
+        contracted_graphs.append((G_contracted, contraction))
+
+    sorted_graphs = sorted(contracted_graphs, key=lambda x: len(x[0]))
+    _, contractions = zip(*sorted_graphs)
+    return contractions
+
+
+def iter_neighbor_colors(G: nx.Graph, node: str) -> Iterator[str]:
+    color_set = set()
+    for child_node in G[node]:
+        color = G.nodes[child_node]['color']
+        if color not in color_set:
+            color_set.add(color)
+            yield color
+
+
+def get_neighbor_colors_by_freq(G: nx.Graph, node: str) -> List[str]:
     frequencies = {}
     for child_node in G[node]:
         color = G.nodes[child_node]['color']

@@ -1,6 +1,6 @@
 import json
 from pathlib import Path
-from typing import Iterator, List, Optional
+from typing import List, Optional
 
 import networkx as nx
 
@@ -33,10 +33,12 @@ class Solver:
         if max_contractions is not None and ops.get_n_non_singular_colors(G) > max_contractions:
             return None
 
-        for contraction in self._iter_contractions(G, last_contraction):
-            child_graph = ops.contract(G, contraction)
+        contractions = list(ops.iter_contractions(G, last_contraction=last_contraction))
+        contractions = ops.order_contractions_by_graph_size(G, contractions)
+        for contraction in contractions:
+            G_contracted = ops.contract(G, contraction)
             child_max_contractions = None if max_contractions is None else max_contractions - 1
-            child_solution = self._solve(child_graph, graph_id, child_max_contractions, contraction)
+            child_solution = self._solve(G_contracted, graph_id, child_max_contractions, contraction)
             if child_solution is not None:
                 solution = child_solution.copy()
                 solution.insert(0, contraction)
@@ -44,16 +46,6 @@ class Solver:
                 return solution
 
         return None
-
-    def _iter_contractions(self, G: nx.Graph, last_contraction: Optional[Contraction]) -> Iterator[Contraction]:
-        markov_root = None if last_contraction is None else last_contraction[0]
-        nodes = ops.get_nodes(G, markov_root=markov_root)
-        nodes = ops.order_nodes_by_centrality(G, nodes)
-
-        for node in nodes:
-            colors = ops.get_neighbor_colors(G, node)
-            for color in colors:
-                yield node, color
 
     def _save_solution(self, G: nx.Graph, graph_id: str, solution: List[Contraction]) -> None:
         if self._solutions_dirpath is None:
