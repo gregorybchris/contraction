@@ -52,7 +52,7 @@ def get_nodes(G: nx.Graph, markov_root: Optional[str] = None) -> List[str]:
         return get_markov_blanket(G, markov_root)
 
 
-def get_nodes_by_centrality(G: nx.Graph, markov_root: Optional[str] = None, power: int = 2):
+def get_nodes_by_centrality(G: nx.Graph, markov_root: Optional[str] = None, power: int = 2) -> List[str]:
     nodes = get_nodes(G, markov_root=markov_root)
 
     scores = {}
@@ -74,9 +74,16 @@ def get_nodes_by_centrality(G: nx.Graph, markov_root: Optional[str] = None, powe
     return list(sorted_nodes)
 
 
-def get_nodes_by_degree(G: nx.Graph, markov_root: Optional[str] = None):
+def get_nodes_by_degree(G: nx.Graph, markov_root: Optional[str] = None) -> List[str]:
     nodes = get_nodes(G, markov_root=markov_root)
 
+    scores = [(node, len(G[node])) for node in nodes]
+    sorted_scores = sorted(scores, key=lambda x: -x[1])
+    sorted_nodes, _ = zip(*sorted_scores)
+    return list(sorted_nodes)
+
+
+def order_nodes_by_degree(G: nx.Graph, nodes: List[str]) -> List[str]:
     scores = [(node, len(G[node])) for node in nodes]
     sorted_scores = sorted(scores, key=lambda x: -x[1])
     sorted_nodes, _ = zip(*sorted_scores)
@@ -99,7 +106,7 @@ def get_colors(G: nx.Graph, node: str, by_frequency: bool = False) -> List[str]:
     return list(sorted_nodes)
 
 
-def get_n_non_singular_colors(G: nx.Graph):
+def get_n_non_singular_colors(G: nx.Graph) -> int:
     frequencies = {}
     n_non_singular = 0
     for _, data in G.nodes(data=True):
