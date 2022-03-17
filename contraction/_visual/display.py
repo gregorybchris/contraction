@@ -4,9 +4,9 @@ from typing import Dict, List, Optional, Tuple
 import networkx as nx
 import numpy as np
 
-from contraction._gen.color import Color
-from contraction._gen.contraction import Contraction
-from contraction._gen.ops import contract
+from contraction._solve.color import Color
+from contraction._solve.contraction import Contraction
+from contraction._solve.ops import contract
 
 HAS_MATPLOTLIB = True
 try:

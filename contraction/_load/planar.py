@@ -2,7 +2,7 @@ import random
 
 import networkx as nx
 
-from contraction._gen.color import Color
+from contraction._solve.color import Color
 
 
 def _get_color() -> str:

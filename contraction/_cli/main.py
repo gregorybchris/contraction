@@ -3,7 +3,7 @@ import time
 from pathlib import Path
 
 from contraction._load.loader import load_graph
-from contraction._gen.generator import generate_data
+from contraction._solve.solver import Solver
 from contraction._visual.display import Display
 
 
@@ -21,6 +21,8 @@ def cli():
 @click.option('--data', 'data_dirpath', type=ClickPath(exists=True, file_okay=False, resolve_path=True), required=True)
 @click.option('--require-shortest/--no-require-shortest', default=False)
 def generate(data_dirpath: Path, require_shortest: bool):
+    solutions_dirpath = data_dirpath / 'training'
+    solver = Solver(solutions_dirpath, zip_graphs=True)
     for group in [1, 2, 3, 4, 5, 6, 7]:
         for level in [1, 2, 3, 4, 5, 6]:
             graph_id = f'{group}-{level}'
@@ -28,16 +30,8 @@ def generate(data_dirpath: Path, require_shortest: bool):
             graph_filepath = data_dirpath / 'graphs' / f'graph-{graph_id}.json'
             G, max_contractions = load_graph(graph_filepath)
 
-            graph_dirpath = data_dirpath / 'training' / f'graph-{graph_id}'
-            graph_dirpath.mkdir(exist_ok=True, parents=True)
             start_time = time.time()
-            solution = generate_data(
-                G,
-                graph_dirpath,
-                max_contractions,
-                require_shortest=require_shortest,
-                zip_graphs=True,
-            )
+            solution = solver.solve(G, graph_id, max_contractions)
             end_time = time.time() - start_time
             print(f"Solution: {[(node, color) for node, color in solution]}")
             print(f"Processed in {end_time}s")
@@ -46,16 +40,15 @@ def generate(data_dirpath: Path, require_shortest: bool):
 @cli.command()
 @click.option('--graph-id', required=True)
 @click.option('--data', 'data_dirpath', type=ClickPath(exists=True, file_okay=False, resolve_path=True), required=True)
-@click.option('--require-shortest/--no-require-shortest', default=False)
 @click.option('--display-steps/--no-display-steps', default=False)
-def solve(graph_id: str, data_dirpath: Path, require_shortest: bool, display_steps: bool):
+def solve(graph_id: str, data_dirpath: Path, display_steps: bool):
     graph_filepath = data_dirpath / 'graphs' / f'graph-{graph_id}.json'
     G, max_contractions = load_graph(graph_filepath)
 
-    solution_dirpath = data_dirpath / 'training' / f'graph-{graph_id}'
-    solution_dirpath.mkdir(exist_ok=True, parents=True)
+    solutions_dirpath = data_dirpath / 'training'
+    solver = Solver(solutions_dirpath, zip_graphs=True)
     start_time = time.time()
-    solution = generate_data(G, solution_dirpath, max_contractions, require_shortest=require_shortest, zip_graphs=True)
+    solution = solver.solve(G, graph_id, max_contractions)
     end_time = time.time() - start_time
     print(f"Solution: {[(node, color) for node, color in solution]}")
     print(f"Processed in {end_time}s")
