@@ -19,8 +19,7 @@ def cli():
 
 @cli.command()
 @click.option('--data', 'data_dirpath', type=ClickPath(exists=True, file_okay=False, resolve_path=True), required=True)
-@click.option('--require-shortest/--no-require-shortest', default=False)
-def generate(data_dirpath: Path, require_shortest: bool):
+def generate(data_dirpath: Path):
     solutions_dirpath = data_dirpath / 'training'
     solver = Solver(solutions_dirpath, zip_graphs=True)
     for group in [1, 2, 3, 4, 5, 6, 7]:

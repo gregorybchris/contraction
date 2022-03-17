@@ -1,15 +1,14 @@
-from pathlib import Path
-
 import torch
 import torch.nn.functional as F
+from torch_geometric.datasets import Planetoid
+# from torch_geometric.datasets import TUDataset
 from torch_geometric.loader import DataLoader
 
 from contraction._train.contraction_model import ContractionModel
-from contraction._train.contraction_dataset import ContractionDataset
 
-data_dirpath = Path(__file__).parent.parent.parent / 'data' / 'training'
-dataset = ContractionDataset(data_dirpath=data_dirpath)
-loader = DataLoader(dataset, batch_size=1, shuffle=True)
+dataset = Planetoid(root='/tmp/Cora', name='Cora')
+# dataset = TUDataset(root='/tmp/ENZYMES', name='ENZYMES', use_node_attr=True)
+loader = DataLoader(dataset, batch_size=32, shuffle=True)
 
 for batch in loader:
     print(batch.num_graphs)

@@ -48,7 +48,7 @@ class Solver:
     def _iter_contractions(self, G: nx.Graph, last_contraction: Optional[Contraction]) -> Iterator[Contraction]:
         markov_root = None if last_contraction is None else last_contraction[0]
         nodes = ops.get_nodes(G, markov_root=markov_root)
-        nodes = ops.order_nodes_by_degree(G, nodes)
+        nodes = ops.order_nodes_by_centrality(G, nodes)
 
         for node in nodes:
             colors = ops.get_neighbor_colors(G, node)
