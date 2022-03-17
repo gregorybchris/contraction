@@ -35,11 +35,8 @@ class Solver:
             return None
 
         last_contracted_node = path[-1][0] if len(path) > 0 else None
-        nodes = ops.get_nodes_by_degree(G, markov_root=last_contracted_node)
-        # nodes = ops.get_nodes(G, markov_root=last_contracted_node)
-        # print('all', nodes)
-        # nodes = ops.order_nodes_by_degree(G, nodes)
-        # print('by deg', nodes)
+        nodes = ops.get_nodes(G, markov_root=last_contracted_node)
+        nodes = ops.order_nodes_by_degree(G, nodes)
 
         for node in nodes:
             # Get colors of node neighbors

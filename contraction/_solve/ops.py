@@ -52,9 +52,7 @@ def get_nodes(G: nx.Graph, markov_root: Optional[str] = None) -> List[str]:
         return get_markov_blanket(G, markov_root)
 
 
-def get_nodes_by_centrality(G: nx.Graph, markov_root: Optional[str] = None, power: int = 2) -> List[str]:
-    nodes = get_nodes(G, markov_root=markov_root)
-
+def order_nodes_by_centrality(G: nx.Graph, nodes: List[str], power: int = 2) -> List[str]:
     scores = {}
     queue = Queue()
     for node in nodes:
@@ -70,15 +68,6 @@ def get_nodes_by_centrality(G: nx.Graph, markov_root: Optional[str] = None, powe
                     queue.put((child_node, distance + 1))
         scores[node] = score
     sorted_scores = sorted(scores.items(), key=lambda x: x[1])
-    sorted_nodes, _ = zip(*sorted_scores)
-    return list(sorted_nodes)
-
-
-def get_nodes_by_degree(G: nx.Graph, markov_root: Optional[str] = None) -> List[str]:
-    nodes = get_nodes(G, markov_root=markov_root)
-
-    scores = [(node, len(G[node])) for node in nodes]
-    sorted_scores = sorted(scores, key=lambda x: -x[1])
     sorted_nodes, _ = zip(*sorted_scores)
     return list(sorted_nodes)
 
