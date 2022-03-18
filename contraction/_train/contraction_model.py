@@ -1,9 +1,9 @@
-import torch
 import torch.nn.functional as F
+from torch import nn
 from torch_geometric.nn import GCNConv
 
 
-class ContractionModel(torch.nn.Module):
+class ContractionModel(nn.Module):
     def __init__(self, n_node_features: int, n_classes: int):
         super().__init__()
         self.conv1 = GCNConv(n_node_features, 16)

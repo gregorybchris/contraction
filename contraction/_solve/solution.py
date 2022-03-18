@@ -1,6 +1,6 @@
-from typing import List, Optional, Tuple
+from typing import List, Optional
 
-Contraction = Tuple[str, str]
+from contraction._solve.types import Contraction
 
 
 class Solution(list):

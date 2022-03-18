@@ -4,7 +4,7 @@ from typing import List, Optional
 
 import networkx as nx
 
-from contraction._solve.contraction import Contraction, Solution
+from contraction._solve.solution import Contraction, Solution
 from contraction._solve import ops
 
 
@@ -36,9 +36,9 @@ class Solver:
         contractions = list(ops.iter_contractions(G, last_contraction=last_contraction))
         contractions = ops.order_contractions_by_graph_size(G, contractions)
         for contraction in contractions:
-            G_contracted = ops.contract(G, contraction)
+            contracted = ops.contract(G, contraction)
             child_max_contractions = None if max_contractions is None else max_contractions - 1
-            child_solution = self._solve(G_contracted, graph_id, child_max_contractions, contraction)
+            child_solution = self._solve(contracted, graph_id, child_max_contractions, contraction)
             if child_solution is not None:
                 solution = child_solution.push_front(contraction)
                 self._save_solution(G, graph_id, solution)

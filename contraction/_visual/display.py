@@ -5,12 +5,11 @@ import networkx as nx
 import numpy as np
 
 from contraction._solve.color import Color
-from contraction._solve.contraction import Contraction
+from contraction._solve.types import Contraction
 from contraction._solve.ops import contract
 
 HAS_MATPLOTLIB = True
 try:
-    import matplotlib
     import matplotlib.pyplot as plt
 except ImportError:
     HAS_MATPLOTLIB = False

@@ -32,7 +32,7 @@ def generate(data_dirpath: Path):
             start_time = time.time()
             solution = solver.solve(G, graph_id, max_contractions=max_contractions)
             end_time = time.time() - start_time
-            print(f"Solution: {[(node, color) for node, color in solution]}")
+            print(f"Solution: {solution.to_list()}")
             print(f"Processed in {end_time}s")
 
 
@@ -49,7 +49,7 @@ def solve(graph_id: str, data_dirpath: Path, display_steps: bool):
     start_time = time.time()
     solution = solver.solve(G, graph_id, max_contractions=max_contractions)
     end_time = time.time() - start_time
-    print(f"Solution: {[(node, color) for node, color in solution]}")
+    print(f"Solution: {solution.to_list()}")
     print(f"Processed in {end_time}s")
 
     if display_steps:
@@ -57,10 +57,10 @@ def solve(graph_id: str, data_dirpath: Path, display_steps: bool):
         display.draw_graph_grid(G, solution, title=f"Graph: {graph_id}")
 
 
-@cli.command()
+@cli.command(name='display')
 @click.option('--graph-id', required=True)
 @click.option('--data', 'data_dirpath', type=ClickPath(exists=True, file_okay=False, resolve_path=True), required=True)
-def display(graph_id: str, data_dirpath: Path):
+def display_graph(graph_id: str, data_dirpath: Path):
     graph_filepath = data_dirpath / 'graphs' / f'graph-{graph_id}.json'
     G, _ = load_graph(graph_filepath)
     display = Display(seed=0)

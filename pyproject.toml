@@ -66,9 +66,10 @@ ignore_missing_imports = true
 plugins = ["numpy.typing.mypy_plugin"]
 
 [tool.pylint.basic]
-good-names = ["G"]
-max-args = 7
-max-locals = 25
+generated-members = "torch.*"
+good-names = ["f", "x", "G"]
+# max-args = 7
+# max-locals = 25
 notes = ["FIXME"]
 
 [tool.pylint.format]

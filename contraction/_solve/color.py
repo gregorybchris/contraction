@@ -13,24 +13,19 @@ class Color(Enum):
 
     @classmethod
     def to_hex(cls, color: 'Color') -> str:
-        if color == cls.BLACK:
-            return '#2c3e50'
-        elif color == cls.BLUE:
-            return '#2980b9'
-        elif color == cls.GREEN:
-            return '#27ae60'
-        elif color == cls.ORANGE:
-            return '#e67e22'
-        elif color == cls.PINK:
-            return '#ff7979'
-        elif color == cls.PURPLE:
-            return '#8e44ad'
-        elif color == cls.RED:
-            return '#e74c3c'
-        elif color == cls.YELLOW:
-            return '#f1c40f'
-        else:
-            raise ValueError(f"Unknown color {color}")
+        hex_map = {
+            cls.BLACK: '#2c3e50',
+            cls.BLUE: '#2980b9',
+            cls.GREEN: '#27ae60',
+            cls.ORANGE: '#e67e22',
+            cls.PINK: '#ff7979',
+            cls.PURPLE: '#8e44ad',
+            cls.RED: '#e74c3c',
+            cls.YELLOW: '#f1c40f',
+        }
+        if color in hex_map:
+            return hex_map[color]
+        raise ValueError(f"Unknown color {color}")
 
     @classmethod
     def from_str(cls, color_str: str) -> 'Color':

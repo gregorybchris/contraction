@@ -3,7 +3,7 @@ from typing import Iterator, List, Optional
 
 import networkx as nx
 
-from contraction._solve.contraction import Contraction
+from contraction._solve.types import Contraction
 
 
 def contract(G: nx.Graph, contraction: Contraction, mutate: bool = False) -> nx.Graph:
@@ -51,9 +51,8 @@ def get_markov_blanket(G: nx.Graph, node: str) -> List[str]:
 
 def get_nodes(G: nx.Graph, markov_root: Optional[str] = None) -> List[str]:
     if markov_root is None:
-        return [node for node in G]
-    else:
-        return get_markov_blanket(G, markov_root)
+        return list(G)
+    return get_markov_blanket(G, markov_root)
 
 
 def order_nodes_by_centrality(G: nx.Graph, nodes: List[str], power: int = 2) -> List[str]:
@@ -97,8 +96,8 @@ def iter_contractions(G: nx.Graph, last_contraction: Optional[Contraction] = Non
 def order_contractions_by_graph_size(G: nx.Graph, contractions: List[Contraction]) -> List[Contraction]:
     contracted_graphs = []
     for contraction in contractions:
-        G_contracted = contract(G, contraction)
-        contracted_graphs.append((G_contracted, contraction))
+        contracted = contract(G, contraction)
+        contracted_graphs.append((contracted, contraction))
 
     sorted_graphs = sorted(contracted_graphs, key=lambda x: len(x[0]))
     _, contractions = zip(*sorted_graphs)
