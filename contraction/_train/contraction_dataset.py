@@ -24,5 +24,6 @@ class ContractionDataset(Dataset):
         for filepath in graph_dirpath.iterdir():
             if filepath.name.startswith('graph'):
                 G = nx.read_gml(filepath)
-                data = from_networkx(G, group_node_attrs=['color'])
+                # data = from_networkx(G, group_node_attrs=['color'])
+                data = from_networkx(G)
                 return data

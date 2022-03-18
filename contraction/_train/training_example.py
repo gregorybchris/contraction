@@ -8,7 +8,8 @@ from contraction._train.contraction_model import ContractionModel
 
 N_EPOCHS = 200
 
-if __name__ == '__main__':
+
+def train_model():
     dataset = Planetoid(root='/tmp/Cora', name='Cora')
     # dataset = TUDataset(root='/tmp/ENZYMES', name='ENZYMES', use_node_attr=True)
     loader = DataLoader(dataset, batch_size=32, shuffle=True)

@@ -5,6 +5,7 @@ from pathlib import Path
 from contraction._load.loader import load_graph
 from contraction._solve.solver import Solver
 from contraction._visual.display import Display
+from contraction._train.training import train_model
 
 
 class ClickPath(click.Path):
@@ -66,3 +67,10 @@ def display_graph(graph_id: str, data_dirpath: Path):
     display = Display(seed=0)
     display.draw_graph(G)
     display.show()
+
+
+@cli.command()
+@click.option('--data', 'data_dirpath', type=ClickPath(exists=True, file_okay=False, resolve_path=True), required=True)
+def train(data_dirpath: Path):
+    print("Training")
+    train_model(data_dirpath / 'training')

@@ -9,8 +9,8 @@ from contraction._train.contraction_dataset import ContractionDataset
 
 N_EPOCHS = 200
 
-if __name__ == '__main__':
-    data_dirpath = Path(__file__).parent.parent.parent / 'data' / 'training'
+
+def train_model(data_dirpath: Path):
     dataset = ContractionDataset(data_dirpath=data_dirpath)
     loader = DataLoader(dataset, batch_size=1, shuffle=True)
 
