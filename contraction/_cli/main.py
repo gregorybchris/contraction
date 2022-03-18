@@ -33,7 +33,7 @@ def generate(data_dirpath: Path):
             start_time = time.time()
             solution = solver.solve(G, graph_id, max_contractions)
             end_time = time.time() - start_time
-            print(f"Solution: {solution.to_list()}")
+            print(f"Solution: {solution}")
             print(f"Processed in {end_time}s")
 
 
@@ -50,7 +50,7 @@ def solve(graph_id: str, data_dirpath: Path, display_steps: bool):
     start_time = time.time()
     solution = solver.solve(G, graph_id, max_contractions)
     end_time = time.time() - start_time
-    print(f"Solution: {solution.to_list()}")
+    print(f"Solution: {solution}")
     print(f"Processed in {end_time}s")
 
     if display_steps:
