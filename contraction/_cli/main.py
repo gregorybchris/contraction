@@ -22,7 +22,7 @@ def cli():
 @click.option('--data', 'data_dirpath', type=ClickPath(exists=True, file_okay=False, resolve_path=True), required=True)
 def generate(data_dirpath: Path):
     solutions_dirpath = data_dirpath / 'training'
-    solver = Solver(solutions_dirpath, zip_graphs=True)
+    solver = Solver(solutions_dirpath, zip_graphs=False)
     for group in [1, 2, 3, 4, 5, 6, 7]:
         for level in [1, 2, 3, 4, 5, 6]:
             graph_id = f'{group}-{level}'
