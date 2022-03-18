@@ -4,7 +4,7 @@ from typing import List, Optional
 
 import networkx as nx
 
-from contraction._solve.contraction import Contraction
+from contraction._solve.contraction import Contraction, Solution
 from contraction._solve import ops
 
 
@@ -15,7 +15,7 @@ class Solver:
 
     def solve(self, G: nx.Graph, graph_id: str, max_contractions: Optional[int] = None) -> Optional[List[Contraction]]:
         solution = self._solve(G, graph_id, max_contractions, None)
-        return None if solution is None else solution
+        return None if solution is None else solution.to_list()
 
     def _solve(
         self,
@@ -23,9 +23,9 @@ class Solver:
         graph_id: str,
         max_contractions: Optional[int],
         last_contraction: Optional[Contraction],
-    ) -> Optional[List[Contraction]]:
+    ) -> Optional[Solution]:
         if len(G) == 1:
-            return []
+            return Solution()
 
         if max_contractions is not None and ops.get_n_graph_colors(G) > max_contractions + 1:
             return None
@@ -40,14 +40,13 @@ class Solver:
             child_max_contractions = None if max_contractions is None else max_contractions - 1
             child_solution = self._solve(G_contracted, graph_id, child_max_contractions, contraction)
             if child_solution is not None:
-                solution = child_solution.copy()
-                solution.insert(0, contraction)
+                solution = child_solution.push_front(contraction)
                 self._save_solution(G, graph_id, solution)
                 return solution
 
         return None
 
-    def _save_solution(self, G: nx.Graph, graph_id: str, solution: List[Contraction]) -> None:
+    def _save_solution(self, G: nx.Graph, graph_id: str, solution: Solution) -> None:
         if self._solutions_dirpath is None:
             return
 
