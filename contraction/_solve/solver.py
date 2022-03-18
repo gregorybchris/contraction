@@ -61,7 +61,7 @@ class Solver:
         # Save graph solution
         solution_filepath = solution_dirpath / f'solution-{graph_hash}.json'
         contractions = []
-        for node, color in solution:
+        for node, color in solution.to_list():
             contraction = {
                 'node': node,
                 'color': color,

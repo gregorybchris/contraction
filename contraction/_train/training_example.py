@@ -37,7 +37,6 @@ def train_model():
             print(f"Training.. epoch {epoch}/{N_EPOCHS}")
         optimizer.zero_grad()
         y_pred = model(data)
-        print(y_pred.shape)
         loss = F.nll_loss(y_pred[data.train_mask], data.y[data.train_mask])
         loss.backward()
         optimizer.step()
