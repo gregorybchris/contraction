@@ -1,7 +1,7 @@
 import torch
 import torch.nn.functional as F
 from torch import nn
-from torch_geometric.nn import GCNConv, global_mean_pool
+from torch_geometric.nn import GCNConv, global_max_pool
 from torch_geometric.data import Data
 
 
@@ -23,7 +23,7 @@ class ContractionModel(nn.Module):
         x = F.relu(x)
         x = F.dropout(x, training=self.training)
         x = self.conv2(x, data.edge_index)
-        x = global_mean_pool(x, data.batch)
+        x = global_max_pool(x, data.batch)
         x = self.linear(x)
         x = x.flatten()
 
