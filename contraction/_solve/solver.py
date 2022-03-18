@@ -13,7 +13,7 @@ class Solver:
         self._solutions_dirpath = solutions_dirpath
         self._zip_graphs = zip_graphs
 
-    def solve(self, G: nx.Graph, graph_id: str, max_contractions: Optional[int] = None) -> Optional[List[Contraction]]:
+    def solve(self, G: nx.Graph, graph_id: str, max_contractions: int) -> Optional[List[Contraction]]:
         solution = self._solve(G, graph_id, max_contractions, None)
         return None if solution is None else solution.to_list()
 
@@ -21,24 +21,23 @@ class Solver:
         self,
         G: nx.Graph,
         graph_id: str,
-        max_contractions: Optional[int],
+        max_contractions: int,
         last_contraction: Optional[Contraction],
     ) -> Optional[Solution]:
         if len(G) == 1:
             return Solution()
 
-        if max_contractions is not None and ops.get_n_graph_colors(G) > max_contractions + 1:
+        if ops.get_n_graph_colors(G) > max_contractions + 1:
             return None
 
-        if max_contractions is not None and ops.get_n_non_singular_colors(G) > max_contractions:
+        if ops.get_n_non_singular_colors(G) > max_contractions:
             return None
 
         contractions = list(ops.iter_contractions(G, last_contraction=last_contraction))
         contractions = ops.order_contractions_by_graph_size(G, contractions)
         for contraction in contractions:
             contracted = ops.contract(G, contraction)
-            child_max_contractions = None if max_contractions is None else max_contractions - 1
-            child_solution = self._solve(contracted, graph_id, child_max_contractions, contraction)
+            child_solution = self._solve(contracted, graph_id, max_contractions - 1, contraction)
             if child_solution is not None:
                 solution = child_solution.push_front(contraction)
                 self._save_solution(G, graph_id, solution)

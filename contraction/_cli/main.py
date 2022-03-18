@@ -31,7 +31,7 @@ def generate(data_dirpath: Path):
             G, max_contractions = load_graph(graph_filepath)
 
             start_time = time.time()
-            solution = solver.solve(G, graph_id, max_contractions=max_contractions)
+            solution = solver.solve(G, graph_id, max_contractions)
             end_time = time.time() - start_time
             print(f"Solution: {solution.to_list()}")
             print(f"Processed in {end_time}s")
@@ -48,7 +48,7 @@ def solve(graph_id: str, data_dirpath: Path, display_steps: bool):
     solutions_dirpath = data_dirpath / 'training'
     solver = Solver(solutions_dirpath, zip_graphs=True)
     start_time = time.time()
-    solution = solver.solve(G, graph_id, max_contractions=max_contractions)
+    solution = solver.solve(G, graph_id, max_contractions)
     end_time = time.time() - start_time
     print(f"Solution: {solution.to_list()}")
     print(f"Processed in {end_time}s")
