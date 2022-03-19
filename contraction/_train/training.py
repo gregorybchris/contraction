@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import List
 
 import matplotlib.pyplot as plt
 import torch
@@ -30,6 +29,7 @@ def train_model(data_dirpath: Path):
 
     train_losses = []
     test_losses = []
+    test_accuracies = []
 
     for epoch in range(N_EPOCHS):
         model.train()
@@ -47,16 +47,37 @@ def train_model(data_dirpath: Path):
 
         model.eval()
         test_loss = 0
+        n_correct = 0
         for batch in test_loader:
             y_pred = model(batch)
             loss = F.mse_loss(y_pred, batch.y)
             test_loss += float(loss)
+            n_correct += 1 if torch.round(y_pred) == torch.round(batch.y) else 0
         test_loss /= len(test_loader)
         test_losses.append(test_loss)
+        test_accuracy = n_correct / len(test_loader)
+        test_accuracies.append(test_accuracy)
 
-        print(f"Epoch: {epoch}, training loss={train_loss}, test loss={test_loss}")
+        print(f"Epoch: {epoch}, "
+              f"training loss={train_loss}, "
+              f"test loss={test_loss}, "
+              f"accuracy={test_accuracy * 100:0.1f}%")
 
-    plt.plot(range(N_EPOCHS), train_losses, label="Train loss")
-    plt.plot(range(N_EPOCHS), test_losses, label="Test loss")
-    plt.legend(loc="upper right")
+    _, axis_1 = plt.subplots()
+
+    axis_1.set_xlabel('Epochs')
+    axis_1.set_ylabel('Loss')
+    train_loss_plot = axis_1.plot(range(N_EPOCHS), train_losses, color='red', label="Train loss")
+    test_loss_plot = axis_1.plot(range(N_EPOCHS), test_losses, color='blue', label="Test loss")
+    axis_1.tick_params(axis='y')
+
+    axis_2 = axis_1.twinx()
+    axis_2.set_ylabel('Accuracy')
+    accuracy_plot = axis_2.plot(range(N_EPOCHS), test_accuracies, color='green', label="Accuracy")
+    axis_2.tick_params(axis='y')
+
+    plots = train_loss_plot + test_loss_plot + accuracy_plot
+    labels = [plot.get_label() for plot in plots]
+    plt.legend(plots, labels, loc=0)
+
     plt.show()
