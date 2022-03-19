@@ -11,16 +11,37 @@ from contraction._solve.color import Color
 
 
 class ContractionDataset(Dataset):
+    TRAIN_SPLIT = 'train'
+    TEST_SPLIT = 'test'
+
     def __init__(
         self,
         data_dirpath: Union[str, Path],
+        split: str = 'train',
     ):
         super().__init__()
         self._data_dirpath = Path(data_dirpath)
+        self._split = split
+
+        assert split in [self.TRAIN_SPLIT, self.TEST_SPLIT]
+
         self._graph_filepaths = list(self._iter_graph_filepaths())
 
     def _iter_graph_filepaths(self) -> Iterator[Path]:
         for graph_dirpath in self._data_dirpath.iterdir():
+
+            pattern = re.compile(r"^graph-([0-9]+)-([0-9]+)")
+            match = pattern.match(str(graph_dirpath.name))
+            graph_id_level = int(match.group(2))
+
+            # Don't train on odd levels
+            if self._split == self.TRAIN_SPLIT and graph_id_level % 2 == 1:
+                continue
+
+            # Don't test on even levels
+            if self._split == self.TEST_SPLIT and graph_id_level % 2 == 0:
+                continue
+
             for solution_filepath in graph_dirpath.iterdir():
                 if solution_filepath.name.startswith('graph'):
                     yield solution_filepath
