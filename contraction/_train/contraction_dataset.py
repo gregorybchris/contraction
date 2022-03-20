@@ -53,13 +53,12 @@ class ContractionDataset(Dataset):
 
     @classmethod
     def graph_to_data(cls, G: nx.Graph) -> Data:
-        G = G.copy()
         colors = [c.value for c in Color]
         for node in G:
             color = G.nodes[node]['color']
-            G.nodes[node]['color'] = colors.index(color)
+            G.nodes[node]['color_ohe'] = colors.index(color)
 
-        return from_networkx(G, group_node_attrs=['color'])
+        return from_networkx(G, group_node_attrs=['color_ohe'])
 
     def __getitem__(self, idx: int) -> Data:
         # Get and transform graph
