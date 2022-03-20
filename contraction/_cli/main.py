@@ -73,4 +73,4 @@ def display_graph(graph_id: str, data_dirpath: Path):
 @click.option('--data', 'data_dirpath', type=ClickPath(exists=True, file_okay=False, resolve_path=True), required=True)
 def train(data_dirpath: Path):
     print("Training")
-    train_model(data_dirpath / 'training')
+    train_model(data_dirpath)

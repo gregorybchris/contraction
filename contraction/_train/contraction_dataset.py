@@ -32,6 +32,8 @@ class ContractionDataset(Dataset):
 
             pattern = re.compile(r"^graph-([0-9]+)-([0-9]+)")
             match = pattern.match(str(graph_dirpath.name))
+            if match is None:
+                continue
             graph_id_level = int(match.group(2))
 
             # Don't train on odd levels
@@ -49,14 +51,20 @@ class ContractionDataset(Dataset):
     def __len__(self) -> int:
         return len(self._graph_filepaths)
 
-    def __getitem__(self, idx: int) -> Data:
-        # Get and transform graph
-        graph_filepath = self._graph_filepaths[idx]
-        G: nx.Graph = nx.read_gml(graph_filepath)
+    @classmethod
+    def graph_to_data(cls, G: nx.Graph) -> Data:
+        G = G.copy()
         colors = [c.value for c in Color]
         for node in G:
             color = G.nodes[node]['color']
             G.nodes[node]['color'] = colors.index(color)
+
+        return from_networkx(G, group_node_attrs=['color'])
+
+    def __getitem__(self, idx: int) -> Data:
+        # Get and transform graph
+        graph_filepath = self._graph_filepaths[idx]
+        G: nx.Graph = nx.read_gml(graph_filepath)
 
         # Get number of contractions needed
         pattern = re.compile(r"^graph-(.*).gml")
@@ -69,6 +77,6 @@ class ContractionDataset(Dataset):
             n_contractions = len(solution['contractions'])
 
         # Populate Data object
-        data = from_networkx(G, group_node_attrs=['color'])
+        data = self.graph_to_data(G)
         data.y = float(n_contractions)
         return data

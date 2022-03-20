@@ -17,10 +17,10 @@ N_EPOCHS = 100
 def train_model(data_dirpath: Path):
     torch.manual_seed(RANDOM_SEED)
 
-    train_dataset = ContractionDataset(data_dirpath=data_dirpath, split=ContractionDataset.TRAIN_SPLIT)
+    training_dirpath = data_dirpath / 'training'
+    train_dataset = ContractionDataset(training_dirpath, split=ContractionDataset.TRAIN_SPLIT)
     train_loader = DataLoader(train_dataset, batch_size=1, shuffle=True)
-
-    test_dataset = ContractionDataset(data_dirpath=data_dirpath, split=ContractionDataset.TEST_SPLIT)
+    test_dataset = ContractionDataset(training_dirpath, split=ContractionDataset.TEST_SPLIT)
     test_loader = DataLoader(test_dataset, batch_size=1, shuffle=True)
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -32,6 +32,7 @@ def train_model(data_dirpath: Path):
     test_accuracies = []
 
     for epoch in range(N_EPOCHS):
+        # Train model on train data
         model.train()
         train_loss = 0
         for batch in train_loader:
@@ -45,6 +46,7 @@ def train_model(data_dirpath: Path):
         train_loss /= len(train_loader)
         train_losses.append(train_loss)
 
+        # Evaluate model on test data
         model.eval()
         test_loss = 0
         n_correct = 0
@@ -52,7 +54,9 @@ def train_model(data_dirpath: Path):
             y_pred = model(batch)
             loss = F.mse_loss(y_pred, batch.y)
             test_loss += float(loss)
-            n_correct += 1 if torch.round(y_pred) == torch.round(batch.y) else 0
+            y_pred_int = torch.round(y_pred)
+            n_correct += 1 if y_pred_int == batch.y else 0
+            # print(f"{int(batch.y)}, {int(y_pred_int)}, {float(y_pred):0.2f}")
         test_loss /= len(test_loader)
         test_losses.append(test_loss)
         test_accuracy = n_correct / len(test_loader)
@@ -63,6 +67,7 @@ def train_model(data_dirpath: Path):
               f"test loss={test_loss}, "
               f"accuracy={test_accuracy * 100:0.1f}%")
 
+    # Plot loss and accuracy
     _, axis_1 = plt.subplots()
 
     axis_1.set_xlabel('Epochs')
@@ -81,3 +86,8 @@ def train_model(data_dirpath: Path):
     plt.legend(plots, labels, loc=0)
 
     plt.show()
+
+    models_dirpath = data_dirpath / 'models'
+    models_dirpath.mkdir(parents=True, exist_ok=True)
+    model_filepath = models_dirpath / 'model.pt'
+    torch.save(model.state_dict(), model_filepath)

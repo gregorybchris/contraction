@@ -4,6 +4,8 @@ from typing import Iterator, List, Optional
 import networkx as nx
 
 from contraction._solve.types import Contraction
+from contraction._train.contraction_model import ContractionModel
+from contraction._train.contraction_dataset import ContractionDataset
 
 
 def contract(G: nx.Graph, contraction: Contraction, mutate: bool = False) -> nx.Graph:
@@ -102,6 +104,25 @@ def order_contractions_by_graph_size(G: nx.Graph, contractions: List[Contraction
     sorted_graphs = sorted(contracted_graphs, key=lambda x: len(x[0]))
     _, contractions = zip(*sorted_graphs)
     return contractions
+
+
+def order_contractions_with_model(
+    G: nx.Graph,
+    contractions: List[Contraction],
+    model: ContractionModel,
+) -> List[Contraction]:
+    model.eval()
+    predictions = []
+    for contraction in contractions:
+        contracted = contract(G, contraction)
+        if len(contracted) == 1:
+            predictions.append((contraction, 0))
+            continue
+        data = ContractionDataset.graph_to_data(contracted)
+        predictions.append((contraction, model(data)))
+    sorted_predictions = sorted(predictions, key=lambda x: x[1])
+    sorted_contractions, _ = zip(*sorted_predictions)
+    return list(sorted_contractions)
 
 
 def iter_neighbor_colors(G: nx.Graph, node: str) -> Iterator[str]:

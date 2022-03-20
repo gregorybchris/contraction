@@ -3,7 +3,10 @@ from pathlib import Path
 from typing import List, Optional
 
 import networkx as nx
+import torch
 
+from contraction._solve.color import Color
+from contraction._train.contraction_model import ContractionModel
 from contraction._solve.solution import Contraction, Solution
 from contraction._solve import ops
 
@@ -12,6 +15,10 @@ class Solver:
     def __init__(self, solutions_dirpath: Optional[Path] = None, zip_graphs: bool = True):
         self._solutions_dirpath = solutions_dirpath
         self._zip_graphs = zip_graphs
+
+        model_filepath = solutions_dirpath.parent / 'models' / 'model.pt'
+        self._model = ContractionModel(x_size=len(Color))
+        self._model.load_state_dict(torch.load(model_filepath))
 
     def solve(self, G: nx.Graph, graph_id: str, max_contractions: int) -> Optional[List[Contraction]]:
         solution = self._solve(G, graph_id, max_contractions, None)
@@ -35,6 +42,7 @@ class Solver:
 
         contractions = list(ops.iter_contractions(G, last_contraction=last_contraction))
         contractions = ops.order_contractions_by_graph_size(G, contractions)
+        # contractions = ops.order_contractions_with_model(G, contractions, self._model)
         for contraction in contractions:
             contracted = ops.contract(G, contraction)
             child_solution = self._solve(contracted, graph_id, max_contractions - 1, contraction)
