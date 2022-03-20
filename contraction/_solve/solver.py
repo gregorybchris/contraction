@@ -17,7 +17,7 @@ class Solver:
         self._zip_graphs = zip_graphs
 
         model_filepath = solutions_dirpath.parent / 'models' / 'model.pt'
-        self._model = ContractionModel(x_size=len(Color))
+        self._model = ContractionModel(len(Color))
         self._model.load_state_dict(torch.load(model_filepath))
 
     def solve(self, G: nx.Graph, graph_id: str, max_contractions: int) -> Optional[List[Contraction]]:
@@ -41,10 +41,14 @@ class Solver:
             return None
 
         contractions = list(ops.iter_contractions(G, last_contraction=last_contraction))
-        contractions = ops.order_contractions_by_graph_size(G, contractions)
-        # contractions = ops.order_contractions_with_model(G, contractions, self._model)
-        for contraction in contractions:
-            contracted = ops.contract(G, contraction)
+
+        # contractions = ops.order_contractions_by_graph_size(G, contractions)
+        # for contraction in contractions:
+        #     contracted = ops.contract(G, contraction)
+
+        contractions = ops.order_contractions_with_model(G, contractions, self._model)
+        for contraction, contracted in contractions:
+
             child_solution = self._solve(contracted, graph_id, max_contractions - 1, contraction)
             if child_solution is not None:
                 solution = child_solution.push_front(contraction)

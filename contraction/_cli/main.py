@@ -21,7 +21,7 @@ def cli():
 @cli.command()
 @click.option('--data', 'data_dirpath', type=ClickPath(exists=True, file_okay=False, resolve_path=True), required=True)
 def generate(data_dirpath: Path):
-    solutions_dirpath = data_dirpath / 'training'
+    solutions_dirpath = data_dirpath / 'solutions'
     solver = Solver(solutions_dirpath, zip_graphs=False)
     for group in [1, 2, 3, 4, 5, 6, 7]:
         for level in [1, 2, 3, 4, 5, 6]:
@@ -45,7 +45,7 @@ def solve(graph_id: str, data_dirpath: Path, display_steps: bool):
     graph_filepath = data_dirpath / 'graphs' / f'graph-{graph_id}.json'
     G, max_contractions = load_graph(graph_filepath)
 
-    solutions_dirpath = data_dirpath / 'training'
+    solutions_dirpath = data_dirpath / 'solutions'
     solver = Solver(solutions_dirpath, zip_graphs=True)
     start_time = time.time()
     solution = solver.solve(G, graph_id, max_contractions)
@@ -71,6 +71,7 @@ def display_graph(graph_id: str, data_dirpath: Path):
 
 @cli.command()
 @click.option('--data', 'data_dirpath', type=ClickPath(exists=True, file_okay=False, resolve_path=True), required=True)
-def train(data_dirpath: Path):
-    print("Training")
-    train_model(data_dirpath)
+@click.option('--save/--no-save', default=True)
+@click.option('--plot/--no-plot', default=True)
+def train(data_dirpath: Path, save: bool, plot: bool):
+    train_model(data_dirpath, save, plot)

@@ -1,5 +1,5 @@
 from queue import Queue
-from typing import Iterator, List, Optional
+from typing import Iterator, List, Optional, Tuple
 
 import networkx as nx
 
@@ -110,19 +110,20 @@ def order_contractions_with_model(
     G: nx.Graph,
     contractions: List[Contraction],
     model: ContractionModel,
-) -> List[Contraction]:
+) -> List[Tuple[Contraction, nx.Graph]]:
     model.eval()
     predictions = []
     for contraction in contractions:
         contracted = contract(G, contraction)
         if len(contracted) == 1:
-            predictions.append((contraction, 0))
+            predictions.append((contraction, 0, contracted))
             continue
         data = ContractionDataset.graph_to_data(contracted)
-        predictions.append((contraction, model(data)))
+        prediction = model(data)
+        predictions.append((contraction, prediction, contracted))
     sorted_predictions = sorted(predictions, key=lambda x: x[1])
-    sorted_contractions, _ = zip(*sorted_predictions)
-    return list(sorted_contractions)
+    sorted_contractions, _, sorted_contracted = zip(*sorted_predictions)
+    return list(zip(sorted_contractions, sorted_contracted))
 
 
 def iter_neighbor_colors(G: nx.Graph, node: str) -> Iterator[str]:
