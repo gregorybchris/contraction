@@ -138,6 +138,7 @@ def get_centers(image_width: int, image_height: int) -> np.ndarray:
 
             centers[row, col, :] = (x, y)
 
+    # Scale based on image size
     centers[:, :, 0] = centers[:, :, 0] * image_width // scale_width
     centers[:, :, 1] = centers[:, :, 1] * image_height // scale_height
 
@@ -177,25 +178,26 @@ def take_sample(image_array: np.ndarray, x: int, y: int, radius: int) -> Tuple[i
     return tuple(total // n_pixels)
 
 
-def save_debug_image(
+def get_debug_image(
     image_array: np.ndarray,
-    debug_dirpath: Path,
     labels: np.ndarray,
     centers: np.ndarray,
     color_map: Dict[int, Color],
     box_radius: int,
-    graph_id: str,
-) -> Tuple[Any, nx.Graph]:
+) -> Image:
     for row in range(N_ROWS):
         for col in range(N_COLS):
             label = labels[row, col]
             x, y = centers[row, col]
             color_box(image_array, x, y, box_radius, color_map[label])
 
-    debug_image = Image.fromarray(image_array)
-    debug_image_filename = f'kami-{graph_id}-debug.png'
-    debug_image_filepath = debug_dirpath / debug_image_filename
-    debug_image.save(debug_image_filepath)
+    return Image.fromarray(image_array)
+
+
+def save_debug_image(image: Image, debug_dirpath: Path, graph_id: str):
+    filename = f'kami-{graph_id}-debug.png'
+    filepath = debug_dirpath / filename
+    image.save(filepath)
 
 
 def save_graph(G: nx.Graph, graph_id: str, graphs_dirpath: Path) -> None:
@@ -226,6 +228,7 @@ def convert_image(graph_id: str, images_dirpath: Path, debug_dirpath: Optional[P
     rename_graph_nodes(G)
 
     if debug_dirpath is not None:
-        save_debug_image(image_array, debug_dirpath, labels, centers, color_map, box_radius, graph_id)
+        debug_image = get_debug_image(image_array, labels, centers, color_map, box_radius)
+        save_debug_image(debug_image, debug_dirpath, graph_id)
 
     return G
