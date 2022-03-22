@@ -1,6 +1,5 @@
 from pathlib import Path
 
-import matplotlib.pyplot as plt
 import torch
 import torch.nn.functional as F
 from torch_geometric.loader import DataLoader
@@ -10,12 +9,12 @@ from contraction._solve.color import Color
 from contraction._train.contraction_model import ContractionModel
 from contraction._train.contraction_dataset import ContractionDataset
 from contraction._train.metrics import Metrics
+from contraction._train.plotting import plot_metrics
 
 RANDOM_SEED = 42
-N_EPOCHS = 100
 
 
-def train_model(data_dirpath: Path, save: bool, plot: bool):
+def train_model(data_dirpath: Path, save: bool, plot: bool, n_epochs: int):
     torch.manual_seed(RANDOM_SEED)
 
     solutions_dirpath = data_dirpath / 'solutions'
@@ -32,7 +31,9 @@ def train_model(data_dirpath: Path, save: bool, plot: bool):
     optimizer = torch.optim.Adam(model.parameters(), lr=0.01, weight_decay=5e-4)
 
     metrics = Metrics()
-    for epoch in range(N_EPOCHS):
+    for epoch in range(n_epochs):
+        metrics.log('epoch', epoch)
+
         # Train model on train data
         model.train()
         train_loss = 0
@@ -80,30 +81,6 @@ def train_model(data_dirpath: Path, save: bool, plot: bool):
 
     if plot:
         plot_metrics(metrics)
-
-
-def plot_metrics(metrics: Metrics):
-    # Plot loss and accuracy
-    _, axis_1 = plt.subplots()
-    x_series = range(N_EPOCHS)
-
-    axis_1.set_xlabel('Epoch')
-    axis_1.set_ylabel('Loss (MSE)')
-    train_loss_plot = axis_1.plot(x_series, metrics.get('train-loss'), color='red', label="Train loss")
-    test_loss_plot = axis_1.plot(x_series, metrics.get('test-loss'), color='blue', label="Test loss")
-    axis_1.tick_params(axis='y')
-
-    axis_2 = axis_1.twinx()
-    axis_2.set_ylabel('Accuracy')
-    train_accuracy_plot = axis_2.plot(x_series, metrics.get('train-accuracy'), color='green', label="Train accuracy")
-    test_accuracy_plot = axis_2.plot(x_series, metrics.get('test-accuracy'), color='orange', label="Test accuracy")
-    axis_2.tick_params(axis='y')
-
-    plots = train_loss_plot + test_loss_plot + train_accuracy_plot + test_accuracy_plot
-    labels = [plot.get_label() for plot in plots]
-    plt.legend(plots, labels, loc=0)
-
-    plt.show()
 
 
 def save_model(models_dirpath: Path, model: ContractionModel):

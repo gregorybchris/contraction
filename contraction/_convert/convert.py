@@ -1,6 +1,6 @@
 import sys
 from pathlib import Path
-from typing import Any, Dict, Optional, Tuple
+from typing import Dict, Optional, Tuple
 
 import networkx as nx
 import numpy as np
@@ -207,6 +207,11 @@ def save_graph(G: nx.Graph, graph_id: str, graphs_dirpath: Path) -> None:
 
 
 def convert_image(graph_id: str, images_dirpath: Path, debug_dirpath: Optional[Path]) -> None:
+    if not HAS_PILLOW:
+        raise ImportError("Pillow is required to convert images to graphs")
+    if not HAS_SKLEARN:
+        raise ImportError("scikit-learn is required to convert images to graphs")
+
     image_filename = f'kami-{graph_id}.png'
     image_filepath = images_dirpath / image_filename
     image = Image.open(image_filepath)

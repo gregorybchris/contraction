@@ -57,7 +57,7 @@ def solve(graph_id: str, data_dirpath: Path, display_steps: bool, from_json: boo
         G = load_graph_from_gml(graph_filepath)
 
     solutions_dirpath = data_dirpath / 'solutions'
-    solver = Solver(solutions_dirpath, zip_graphs=True)
+    solver = Solver(solutions_dirpath, zip_graphs=False)
     start_time = time.time()
     solution = solver.solve(G, graph_id)
     end_time = time.time() - start_time
@@ -90,8 +90,9 @@ def display_graph(graph_id: str, data_dirpath: Path, from_json: bool) -> None:
 @click.option('--data', 'data_dirpath', type=ClickPath(exists=True, file_okay=False, resolve_path=True), required=True)
 @click.option('--save/--no-save', default=True)
 @click.option('--plot/--no-plot', default=True)
-def train(data_dirpath: Path, save: bool, plot: bool) -> None:
-    train_model(data_dirpath, save, plot)
+@click.option('--epochs', 'n_epochs', default=100)
+def train(data_dirpath: Path, save: bool, plot: bool, n_epochs: int) -> None:
+    train_model(data_dirpath, save, plot, n_epochs)
 
 
 @cli.command()
