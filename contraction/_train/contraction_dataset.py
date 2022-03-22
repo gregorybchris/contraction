@@ -1,5 +1,4 @@
 import json
-import re
 from pathlib import Path
 from typing import Iterator, Union
 
@@ -7,6 +6,7 @@ import networkx as nx
 from torch_geometric.data import Data, Dataset
 from torch_geometric.utils import from_networkx
 
+from contraction._convert.graph_id import parse_graph_id
 from contraction._solve.color import Color
 
 
@@ -29,12 +29,11 @@ class ContractionDataset(Dataset):
 
     def _iter_graph_filepaths(self) -> Iterator[Path]:
         for graph_dirpath in self._data_dirpath.iterdir():
-
-            pattern = re.compile(r"^graph-([0-9]+)-([0-9]+)")
-            match = pattern.match(str(graph_dirpath.name))
-            if match is None:
+            graph_id = graph_dirpath.stem[6:]  # handle graph- filename
+            try:
+                _, graph_id_level = parse_graph_id(graph_id)
+            except ValueError:
                 continue
-            graph_id_level = int(match.group(2))
 
             # Don't train on odd levels
             if self._split == self.TRAIN_SPLIT and graph_id_level % 2 == 1:
@@ -61,21 +60,16 @@ class ContractionDataset(Dataset):
         return from_networkx(G, group_node_attrs=['color_ohe'])
 
     def __getitem__(self, idx: int) -> Data:
-        # Get and transform graph
         graph_filepath = self._graph_filepaths[idx]
         G: nx.Graph = nx.read_gml(graph_filepath)
 
-        # Get number of contractions needed
-        pattern = re.compile(r"^graph-(.*).gml")
-        match = pattern.match(str(graph_filepath.name))
-        graph_hash = match.group(1)
+        graph_hash = graph_filepath.stem[6:]  # handle graph- filename
         solution_filepath = graph_filepath.parent / f'solution-{graph_hash}.json'
 
         with solution_filepath.open() as f:
             solution = json.load(f)
             n_contractions = len(solution['contractions'])
 
-        # Populate Data object
         data = self.graph_to_data(G)
         data.y = float(n_contractions)
         return data

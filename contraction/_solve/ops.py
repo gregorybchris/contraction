@@ -38,6 +38,9 @@ def contract(G: nx.Graph, contraction: Contraction, mutate: bool = False) -> nx.
     # Remove same-colored children
     G.remove_nodes_from(nodes_to_remove)
 
+    # Decrement max contractions
+    G.graph['contractions'] -= 1
+
     return G
 
 

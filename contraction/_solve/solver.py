@@ -20,19 +20,20 @@ class Solver:
         self._model = ContractionModel(len(Color))
         self._model.load_state_dict(torch.load(model_filepath))
 
-    def solve(self, G: nx.Graph, graph_id: str, max_contractions: int) -> Optional[List[Contraction]]:
-        solution = self._solve(G, graph_id, max_contractions, None)
+    def solve(self, G: nx.Graph, graph_id: str) -> Optional[List[Contraction]]:
+        solution = self._solve(G, graph_id, None)
         return None if solution is None else solution.to_list()
 
     def _solve(
         self,
         G: nx.Graph,
         graph_id: str,
-        max_contractions: int,
         last_contraction: Optional[Contraction],
     ) -> Optional[Solution]:
         if len(G) == 1:
             return Solution()
+
+        max_contractions = G.graph['contractions']
 
         if ops.get_n_graph_colors(G) > max_contractions + 1:
             return None
@@ -49,7 +50,7 @@ class Solver:
         contractions = ops.order_contractions_with_model(G, contractions, self._model)
         for contraction, contracted in contractions:
 
-            child_solution = self._solve(contracted, graph_id, max_contractions - 1, contraction)
+            child_solution = self._solve(contracted, graph_id, contraction)
             if child_solution is not None:
                 solution = child_solution.push_front(contraction)
                 self._save_solution(G, graph_id, solution)
