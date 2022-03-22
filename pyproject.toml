@@ -68,8 +68,7 @@ plugins = ["numpy.typing.mypy_plugin"]
 [tool.pylint.basic]
 generated-members = "torch.*"
 good-names = ["f", "x", "G"]
-# max-args = 7
-# max-locals = 25
+max-locals = 25
 notes = ["FIXME"]
 
 [tool.pylint.format]
@@ -77,13 +76,13 @@ max-line-length = 119
 
 [tool.pylint.messages_control]
 disable = [
-  "logging-fstring-interpolation", # W1203
-  "unspecified-encoding",          # W1514
-  "missing-docstring",             # C0114, C0115, C0116
-  "wrong-import-order",            # C0411
-  "no-self-use",                   # R0201
-  "duplicate-code",                # R0801
-  "too-few-public-methods",        # R0903
+  "logging-fstring-interpolation",
+  "unspecified-encoding",
+  "missing-docstring",
+  "wrong-import-order",
+  "no-self-use",
+  "duplicate-code",
+  "too-few-public-methods",
 ]
 
 [tool.yapf]
