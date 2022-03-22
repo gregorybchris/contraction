@@ -26,14 +26,14 @@ N_ROWS = 29
 N_RGB = 3
 
 
-def rename_graph_nodes(G: nx.Graph):
+def _rename_graph_nodes(G: nx.Graph):
     nodes = [node for node in G]
     sorted_nodes = sorted(nodes, key=lambda x: int(x))
     for i, node in enumerate(sorted_nodes):
         nx.relabel_nodes(G, {node: str(i)}, copy=False)
 
 
-def simplify_graph(G: nx.Graph) -> None:
+def _simplify_graph(G: nx.Graph) -> None:
     nodes = [node for node in G]
     for node in nodes:
         if node in G:
@@ -46,37 +46,37 @@ def simplify_graph(G: nx.Graph) -> None:
                 size_1 = len(G)
 
 
-def get_node_id(row: int, col: int):
+def _get_node_id(row: int, col: int):
     return str(row * N_COLS + col)
 
 
-def construct_graph(labels: np.ndarray, color_map: Dict[int, Color], max_contractions: int):
+def _construct_graph(labels: np.ndarray, color_map: Dict[int, Color], max_contractions: int):
     G = nx.Graph(contractions=max_contractions)
 
     for row in range(N_ROWS):
         for col in range(N_COLS):
             label = labels[row, col]
             color = color_map[label]
-            node = get_node_id(row, col)
+            node = _get_node_id(row, col)
             G.add_node(node, color=color.value)
             even = (row + col) % 2 == 0
 
             if col > 0 and even:  # Left
-                G.add_edge(node, get_node_id(row, col - 1))
+                G.add_edge(node, _get_node_id(row, col - 1))
 
             if col < N_COLS - 1 and not even:  # Right
-                G.add_edge(node, get_node_id(row, col + 1))
+                G.add_edge(node, _get_node_id(row, col + 1))
 
             if row > 0:  # Up
-                G.add_edge(node, get_node_id(row - 1, col))
+                G.add_edge(node, _get_node_id(row - 1, col))
 
             if row < N_ROWS - 1:  # Down
-                G.add_edge(node, get_node_id(row + 1, col))
+                G.add_edge(node, _get_node_id(row + 1, col))
 
     return G
 
 
-def get_color_map(samples: np.ndarray, labels: np.ndarray) -> Dict[int, Color]:
+def _get_color_map(samples: np.ndarray, labels: np.ndarray) -> Dict[int, Color]:
     color_map = {}
     colors_used = set()
     for row in range(N_ROWS):
@@ -89,7 +89,7 @@ def get_color_map(samples: np.ndarray, labels: np.ndarray) -> Dict[int, Color]:
                 closest_dist = sys.maxsize
                 for color in Color:
                     if color not in colors_used:
-                        dist = color_dist(sample, color)
+                        dist = _color_dist(sample, color)
                         if dist < closest_dist:
                             closest_dist = dist
                             closest_color = color
@@ -100,7 +100,7 @@ def get_color_map(samples: np.ndarray, labels: np.ndarray) -> Dict[int, Color]:
     return color_map
 
 
-def color_dist(color_a: np.ndarray, color_b: Color) -> float:
+def _color_dist(color_a: np.ndarray, color_b: Color) -> float:
     color_b_rgb = Color.to_rgb(color_b)
     dr = color_a[0] - color_b_rgb[0]
     dg = color_a[1] - color_b_rgb[1]
@@ -108,7 +108,7 @@ def color_dist(color_a: np.ndarray, color_b: Color) -> float:
     return np.sqrt(dr**2 + dg**2 + db**2)
 
 
-def get_centers(image_width: int, image_height: int) -> np.ndarray:
+def _get_centers(image_width: int, image_height: int) -> np.ndarray:
     scale_width = 311
     scale_height = 640
 
@@ -145,30 +145,30 @@ def get_centers(image_width: int, image_height: int) -> np.ndarray:
     return centers
 
 
-def get_samples(image_array: np.ndarray, centers: np.ndarray, box_radius: int = 3) -> np.ndarray:
+def _get_samples(image_array: np.ndarray, centers: np.ndarray, box_radius: int = 3) -> np.ndarray:
     samples = np.zeros((N_ROWS, N_COLS, N_RGB))
     for row in range(N_ROWS):
         for col in range(N_COLS):
             x, y = centers[row, col]
-            sample = take_sample(image_array, x, y, box_radius)
+            sample = _take_sample(image_array, x, y, box_radius)
             samples[row, col, :] = sample
     return samples
 
 
-def get_labels(samples: np.ndarray, n_colors: int, n_init: int = 10, max_iter: int = 300) -> np.ndarray:
+def _get_labels(samples: np.ndarray, n_colors: int, n_init: int = 10, max_iter: int = 300) -> np.ndarray:
     samples = samples.reshape(N_ROWS * N_COLS, N_RGB)
     kmeans = KMeans(n_clusters=n_colors, n_init=n_init, max_iter=max_iter)
     kmeans.fit(samples)
     return kmeans.labels_.reshape(N_ROWS, N_COLS)
 
 
-def color_box(image_array: np.ndarray, x: int, y: int, radius: int, color: Color) -> None:
+def _color_box(image_array: np.ndarray, x: int, y: int, radius: int, color: Color) -> None:
     for r in range(-radius, radius):
         for c in range(-radius, radius):
             image_array[y + r, x + c] = Color.to_rgb(color)
 
 
-def take_sample(image_array: np.ndarray, x: int, y: int, radius: int) -> Tuple[int, int, int]:
+def _take_sample(image_array: np.ndarray, x: int, y: int, radius: int) -> Tuple[int, int, int]:
     total = np.zeros(N_RGB, dtype=int)
     n_pixels = 0
     for r in range(-radius, radius + 1):
@@ -178,7 +178,7 @@ def take_sample(image_array: np.ndarray, x: int, y: int, radius: int) -> Tuple[i
     return tuple(total // n_pixels)
 
 
-def get_debug_image(
+def _get_debug_image(
     image_array: np.ndarray,
     labels: np.ndarray,
     centers: np.ndarray,
@@ -189,20 +189,20 @@ def get_debug_image(
         for col in range(N_COLS):
             label = labels[row, col]
             x, y = centers[row, col]
-            color_box(image_array, x, y, box_radius, color_map[label])
+            _color_box(image_array, x, y, box_radius, color_map[label])
 
     return Image.fromarray(image_array)
 
 
-def save_debug_image(image: Image, debug_dirpath: Path, graph_id: str):
+def _save_debug_image(image: Image, debug_dirpath: Path, graph_id: str):
     filename = f'kami-{graph_id}-debug.png'
     filepath = debug_dirpath / filename
     image.save(filepath)
 
 
-def save_graph(G: nx.Graph, graph_id: str, graphs_dirpath: Path) -> None:
-    output_filename = f'graph-{graph_id}.gml'
-    output_filepath = graphs_dirpath / output_filename
+def save_graph(G: nx.Graph, graph_id: str, graphs_dirpath: Path, zip_graph: bool = True) -> None:
+    extension = 'gml.gz' if zip_graph else 'gml'
+    output_filepath = graphs_dirpath / f'graph-{graph_id}.{extension}'
     nx.write_gml(G, output_filepath)
 
 
@@ -222,18 +222,18 @@ def convert_image(graph_id: str, images_dirpath: Path, debug_dirpath: Optional[P
     image_array = np.asarray(image)
     image_width, image_height = image.size
 
-    centers = get_centers(image_width, image_height)
+    centers = _get_centers(image_width, image_height)
     box_radius = image_width // 100
-    samples = get_samples(image_array, centers, box_radius=box_radius)
-    labels = get_labels(samples, n_colors)
-    color_map = get_color_map(samples, labels)
+    samples = _get_samples(image_array, centers, box_radius=box_radius)
+    labels = _get_labels(samples, n_colors)
+    color_map = _get_color_map(samples, labels)
 
-    G = construct_graph(labels, color_map, max_contractions)
-    simplify_graph(G)
-    rename_graph_nodes(G)
+    G = _construct_graph(labels, color_map, max_contractions)
+    _simplify_graph(G)
+    _rename_graph_nodes(G)
 
     if debug_dirpath is not None:
-        debug_image = get_debug_image(image_array, labels, centers, color_map, box_radius)
-        save_debug_image(debug_image, debug_dirpath, graph_id)
+        debug_image = _get_debug_image(image_array, labels, centers, color_map, box_radius)
+        _save_debug_image(debug_image, debug_dirpath, graph_id)
 
     return G

@@ -107,4 +107,4 @@ def convert(data_dirpath: Path, debug: bool) -> None:
             graph_id = make_graph_id(group, level)
             print(graph_id)
             G = convert_image(graph_id, images_dirpath, debug_dirpath)
-            save_graph(G, graph_id, graphs_dirpath)
+            save_graph(G, graph_id, graphs_dirpath, zip_graph=False)
