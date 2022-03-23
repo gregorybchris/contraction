@@ -118,8 +118,8 @@ def convert(data_dirpath: Path, debug: bool, group: Optional[int], level: Option
     images_dirpath = data_dirpath / 'level-images'
     graphs_dirpath = data_dirpath / 'level-graphs'
     debug_dirpath = data_dirpath / 'level-debug' if debug else None
-    groups = range(1, 14) if group is None else [group]
-    levels = range(1, 6) if level is None else [level]
+    groups = range(1, 14 + 1) if group is None else [group]
+    levels = range(1, 6 + 1) if level is None else [level]
     for group in groups:
         for level in levels:
             graph_id = make_graph_id(group, level)
