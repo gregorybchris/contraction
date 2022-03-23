@@ -1,7 +1,7 @@
 from contraction._convert.graph_id import parse_graph_id
 
 
-def get_max_contractions(graph_id: str):
+def get_max_contractions(graph_id: str) -> int:
     group, level = parse_graph_id(graph_id)
     max_contractions = [
         [1, 2, 2, 2, 2, 3],
@@ -19,6 +19,8 @@ def get_max_contractions(graph_id: str):
         [5, 6, 5, 7, 5, 6],
         [6, 5, 5, 9, 10, 9],
         [3, 5, 6, 5, 5, 5],
+        [5, 5, 5, 5, 5, 5],
+        [7, 6, 6, 6, 6, 6],
     ]
     if level < 1 or level > len(max_contractions[0]):
         raise ValueError(f"No contraction metadata for level {level}")
@@ -27,7 +29,7 @@ def get_max_contractions(graph_id: str):
     return max_contractions[group - 1][level - 1]
 
 
-def get_n_colors(graph_id: str):
+def get_n_colors(graph_id: str) -> int:
     group, level = parse_graph_id(graph_id)
     n_colors = [
         [2, 3, 3, 3, 3, 3],
@@ -45,9 +47,67 @@ def get_n_colors(graph_id: str):
         [3, 3, 3, 3, 3, 3],
         [3, 3, 3, 3, 3, 3],
         [2, 3, 4, 4, 4, 4],
+        [4, 4, 4, 4, 4, 4],
+        [5, 5, 5, 5, 5, 4],
     ]
     if level < 1 or level > len(n_colors[0]):
         raise ValueError(f"No color metadata for level {level}")
     if group < 1 or group > len(n_colors):
         raise ValueError(f"No color metadata for group {group}")
     return n_colors[group - 1][level - 1]
+
+
+def get_needs_mask(graph_id: str) -> bool:
+    group, level = parse_graph_id(graph_id)
+    needs_mask = [
+        [False, False, False, False, False, False],
+        [False, False, False, False, False, False],
+        [False, False, False, False, False, False],
+        [False, False, False, False, False, False],
+        [False, False, False, False, False, False],
+        [False, False, False, False, False, False],
+        [False, False, False, False, False, False],
+        [False, False, False, False, False, False],
+        [False, True, True, True, True, True],
+        [False, True, True, True, True, True],
+        [True, True, True, True, True, True],
+        [True, True, True, True, True, True],
+        [True, True, True, True, True, True],
+        [True, True, True, True, True, True],
+        [True, True, False, False, False, False],
+        [False, False, False, False, False, False],
+        [False, False, False, True, True, True],
+    ]
+    if level < 1 or level > len(needs_mask[0]):
+        raise ValueError(f"No mask metadata for level {level}")
+    if group < 1 or group > len(needs_mask):
+        raise ValueError(f"No mask metadata for group {group}")
+    return needs_mask[group - 1][level - 1]
+
+
+def get_n_node_solution(graph_id: str) -> int:
+    group, level = parse_graph_id(graph_id)
+    multinode_solution = [
+        [1, 1, 1, 1, 1, 1],
+        [1, 1, 1, 1, 1, 1],
+        [1, 1, 1, 1, 1, 1],
+        [1, 1, 1, 1, 1, 1],
+        [1, 1, 1, 1, 1, 1],
+        [1, 1, 1, 1, 1, 1],
+        [1, 1, 1, 1, 1, 1],
+        [1, 1, 1, 1, 1, 1],
+        [1, 2, 3, 3, 3, 1],
+        [1, 1, 1, 2, 1, 1],
+        [5, 5, 5, 5, 5, 6],
+        [1, 1, 1, 1, 1, 1],
+        [1, 1, 1, 1, 1, 1],
+        [1, 1, 1, 1, 1, 1],
+        [1, 1, 1, 1, 1, 1],
+        [1, 1, 1, 1, 1, 1],
+        [1, 1, 1, 1, 1, 1],
+    ]
+    if level < 1 or level > len(multinode_solution[0]):
+        raise ValueError(f"No multinode metadata for level {level}")
+    if group < 1 or group > len(multinode_solution):
+        raise ValueError(f"No multinode metadata for group {group}")
+    return multinode_solution[group - 1][level - 1]

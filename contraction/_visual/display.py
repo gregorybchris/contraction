@@ -1,4 +1,5 @@
 import math
+from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
 import networkx as nx
@@ -43,6 +44,9 @@ class Display:
 
         plt.show()
 
+    def save(self, filepath: Path) -> None:
+        plt.savefig(filepath)
+
     def _get_highlight_edges(self, G: nx.Graph, contraction: Contraction) -> List[Tuple[str, str]]:
         node, color = contraction
         highlight_edges = []
@@ -62,7 +66,8 @@ class Display:
         grid_cols = math.ceil((n_contractions + 1) / grid_rows)
 
         px = 1 / plt.rcParams['figure.dpi']
-        figure, axes = plt.subplots(figsize=(1200 * px, 800 * px))
+        figure_width, figure_height = 1600, 900
+        figure, axes = plt.subplots(figsize=(figure_width * px, figure_height * px))
         figure.canvas.set_window_title(title)
         figure.tight_layout()
         axes.autoscale_view(tight=True)
@@ -76,19 +81,18 @@ class Display:
         highlight_edges = None
         for contraction in contractions:
             node, color = contraction
-            subplot_id = int(f"{grid_rows}{grid_cols}{self._figure_count + 1}")
-            plt.subplot(subplot_id, title=f"Step {self._figure_count + 1}: ({node}) {arrow} {color}")
+            subplot_id = (grid_rows, grid_cols, self._figure_count + 1)
+            plt.subplot(*subplot_id, title=f"Step {self._figure_count + 1}: ({node}) {arrow} {color}")
             highlight_edges = self._get_highlight_edges(G, contraction)
             pos = self._draw_graph(G, pos=pos, highlight_edges=highlight_edges)
             self._figure_count += 1
             G = contract(G, contraction)
 
-        subplot_id = int(f"{grid_rows}{grid_cols}{self._figure_count + 1}")
-        plt.subplot(subplot_id, title=f"Step {self._figure_count + 1}: Solved")
+        subplot_id = (grid_rows, grid_cols, self._figure_count + 1)
+        plt.subplot(*subplot_id, title=f"Step {self._figure_count + 1}: Solved")
         self._draw_graph(G, pos=pos)
 
         plt.tight_layout()
-        self.show()
 
     def _draw_graph(
         self,

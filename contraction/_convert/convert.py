@@ -7,7 +7,8 @@ import numpy as np
 
 from contraction._solve import ops
 from contraction._solve.color import Color
-from contraction._convert.puzzle_metadata import get_max_contractions, get_n_colors
+from contraction._convert.puzzle_metadata import (get_max_contractions, get_n_colors, get_needs_mask,
+                                                  get_n_node_solution)
 
 HAS_PILLOW = True
 try:
@@ -52,37 +53,44 @@ def _get_node_id(row: int, col: int):
     return str(row * N_COLS + col)
 
 
-def _construct_graph(labels: np.ndarray, color_map: Dict[int, Color], max_contractions: int):
+def _construct_graph(labels: np.ndarray, color_map: Dict[int, Color], max_contractions: int, mask: np.ndarray):
     G = nx.Graph(contractions=max_contractions)
 
     for row in range(N_ROWS):
         for col in range(N_COLS):
+            if mask[row, col]:
+                continue
+
             label = labels[row, col]
+
             color = color_map[label]
             node = _get_node_id(row, col)
             G.add_node(node, color=color.value)
             even = (row + col) % 2 == 0
 
-            if col > 0 and even:  # Left
+            if col > 0 and even and not mask[row, col - 1]:  # Left
                 G.add_edge(node, _get_node_id(row, col - 1))
 
-            if col < N_COLS - 1 and not even:  # Right
+            if col < N_COLS - 1 and not even and not mask[row, col + 1]:  # Right
                 G.add_edge(node, _get_node_id(row, col + 1))
 
-            if row > 0:  # Up
+            if row > 0 and not mask[row - 1, col]:  # Up
                 G.add_edge(node, _get_node_id(row - 1, col))
 
-            if row < N_ROWS - 1:  # Down
+            if row < N_ROWS - 1 and not mask[row + 1, col]:  # Down
                 G.add_edge(node, _get_node_id(row + 1, col))
 
     return G
 
 
-def _get_color_map(samples: np.ndarray, labels: np.ndarray) -> Dict[int, Color]:
+def _get_color_map(samples: np.ndarray, labels: np.ndarray, mask: np.ndarray) -> Dict[int, Color]:
     color_map = {}
     colors_used = set()
     for row in range(N_ROWS):
         for col in range(N_COLS):
+            if mask[row][col]:
+                continue
+
             label = labels[row][col]
             if label not in color_map:
                 sample = samples[row][col]
@@ -110,7 +118,9 @@ def _color_dist(color_a: np.ndarray, color_b: Color) -> float:
     return np.sqrt(dr**2 + dg**2 + db**2)
 
 
-def _get_centers(image_width: int, image_height: int) -> np.ndarray:
+def _get_centers(image_size: Tuple[int, int]) -> np.ndarray:
+    image_width, image_height = image_size
+
     scale_width = 311
     scale_height = 640
 
@@ -157,19 +167,6 @@ def _get_samples(image_array: np.ndarray, centers: np.ndarray, box_radius: int =
     return samples
 
 
-def _get_labels(samples: np.ndarray, n_colors: int, n_init: int = 10, max_iter: int = 300) -> np.ndarray:
-    samples = samples.reshape(N_ROWS * N_COLS, N_RGB)
-    kmeans = KMeans(n_clusters=n_colors, n_init=n_init, max_iter=max_iter)
-    kmeans.fit(samples)
-    return kmeans.labels_.reshape(N_ROWS, N_COLS)
-
-
-def _color_box(image_array: np.ndarray, x: int, y: int, radius: int, color: Color) -> None:
-    for r in range(-radius, radius):
-        for c in range(-radius, radius):
-            image_array[y + r, x + c] = Color.to_rgb(color)
-
-
 def _take_sample(image_array: np.ndarray, x: int, y: int, radius: int) -> Tuple[int, int, int]:
     total = np.zeros(N_RGB, dtype=int)
     n_pixels = 0
@@ -180,15 +177,77 @@ def _take_sample(image_array: np.ndarray, x: int, y: int, radius: int) -> Tuple[
     return tuple(total // n_pixels)
 
 
+def _get_mask(image_array: np.ndarray, centers: np.ndarray, box_radius: int = 3) -> np.ndarray:
+    mask = np.ones((N_ROWS, N_COLS), dtype=bool)
+    roughness_threshold = 50.0
+    for row in range(N_ROWS):
+        for col in range(N_COLS):
+            x, y = centers[row, col]
+            roughness = _sample_roughness(image_array, x, y, box_radius)
+            if roughness > roughness_threshold:
+                mask[row, col] = False
+
+    return mask
+
+
+def _sample_roughness(image_array: np.ndarray, x: int, y: int, radius: int) -> float:
+    total_diff = 0
+    n_diffs = 0
+    for r in range(-radius, radius):
+        row_diff = image_array[y + r + 1, x - radius:x + radius + 1] - image_array[y + r, x - radius:x + radius + 1]
+        total_diff += np.absolute(row_diff).sum()
+    for c in range(-radius, radius):
+        col_diff = image_array[y - radius:y + radius + 1, x + c + 1] - image_array[y - radius:y + radius + 1, x + c]
+        total_diff += np.absolute(col_diff).sum()
+
+    row_size = radius * 2 + 1
+    n_diffs = (row_size - 1) * row_size * 2
+
+    return total_diff / n_diffs / 3
+
+
+def _get_labels(
+    samples: np.ndarray,
+    n_colors: int,
+    mask: np.ndarray,
+    n_init: int = 10,
+    max_iter: int = 300,
+) -> np.ndarray:
+    samples = samples.reshape(N_ROWS * N_COLS, N_RGB)
+    mask = mask.reshape(N_ROWS * N_COLS)
+
+    labels = np.zeros_like(mask, dtype=int)
+    arg_unmask = np.argwhere(~mask).reshape(-1)
+    samples = samples[~mask]
+
+    kmeans = KMeans(n_clusters=n_colors, n_init=n_init, max_iter=max_iter)
+    kmeans.fit(samples)
+
+    labels[arg_unmask] = kmeans.labels_
+    labels[mask] = -1
+
+    return labels.reshape(N_ROWS, N_COLS)
+
+
+def _color_box(image_array: np.ndarray, x: int, y: int, radius: int, color: Color) -> None:
+    for r in range(-radius, radius):
+        for c in range(-radius, radius):
+            image_array[y + r, x + c] = Color.to_rgb(color)
+
+
 def _get_debug_image(
     image_array: np.ndarray,
     labels: np.ndarray,
     centers: np.ndarray,
     color_map: Dict[int, Color],
     box_radius: int,
+    mask: np.ndarray,
 ) -> Image:
     for row in range(N_ROWS):
         for col in range(N_COLS):
+            if mask[row, col]:
+                continue
+
             label = labels[row, col]
             x, y = centers[row, col]
             _color_box(image_array, x, y, box_radius, color_map[label])
@@ -199,20 +258,20 @@ def _get_debug_image(
 def _save_debug_image(image: Image, debug_dirpath: Path, graph_id: str):
     filename = f'kami-{graph_id}-debug.png'
     filepath = debug_dirpath / filename
+    print(f"Debug image saved to {filepath}")
     image.save(filepath)
 
 
-def save_graph(G: nx.Graph, graph_id: str, graphs_dirpath: Path, zip_graph: bool = True) -> None:
-    extension = 'gml.gz' if zip_graph else 'gml'
-    output_filepath = graphs_dirpath / f'graph-{graph_id}.{extension}'
-    nx.write_gml(G, output_filepath)
-
-
-def convert_image(graph_id: str, images_dirpath: Path, debug_dirpath: Optional[Path]) -> None:
+def convert_image(graph_id: str, images_dirpath: Path, debug_dirpath: Optional[Path]) -> Optional[nx.Graph]:
     if not HAS_PILLOW:
         raise ImportError("Pillow is required to convert images to graphs")
     if not HAS_SKLEARN:
         raise ImportError("scikit-learn is required to convert images to graphs")
+
+    n_node_solution = get_n_node_solution(graph_id)
+    if n_node_solution > 1:
+        print(f"Solution with {n_node_solution} nodes not yet supported")
+        return None
 
     image_filename = f'kami-{graph_id}.png'
     image_filepath = images_dirpath / image_filename
@@ -222,20 +281,32 @@ def convert_image(graph_id: str, images_dirpath: Path, debug_dirpath: Optional[P
     max_contractions = get_max_contractions(graph_id)
 
     image_array = np.asarray(image)
-    image_width, image_height = image.size
 
-    centers = _get_centers(image_width, image_height)
-    box_radius = image_width // 100
+    centers = _get_centers(image.size)
+    box_radius = image.size[0] // 100
     samples = _get_samples(image_array, centers, box_radius=box_radius)
-    labels = _get_labels(samples, n_colors)
-    color_map = _get_color_map(samples, labels)
+    mask = _get_mask(image_array, centers, box_radius=box_radius)
 
-    G = _construct_graph(labels, color_map, max_contractions)
+    # if get_needs_mask(graph_id):
+    #     print("Solution with mask not yet supported")
+    #     return None
+
+    labels = _get_labels(samples, n_colors, mask)
+    color_map = _get_color_map(samples, labels, mask)
+
+    G = _construct_graph(labels, color_map, max_contractions, mask)
     _simplify_graph(G)
     _rename_graph_nodes(G)
 
     if debug_dirpath is not None:
-        debug_image = _get_debug_image(image_array, labels, centers, color_map, box_radius)
+        debug_image = _get_debug_image(image_array, labels, centers, color_map, box_radius, mask)
         _save_debug_image(debug_image, debug_dirpath, graph_id)
 
     return G
+
+
+def save_graph(G: nx.Graph, graph_id: str, graphs_dirpath: Path, zip_graph: bool = True) -> None:
+    extension = 'gml.gz' if zip_graph else 'gml'
+    output_filepath = graphs_dirpath / f'graph-{graph_id}.{extension}'
+    print(f"Graph saved to {output_filepath}")
+    nx.write_gml(G, output_filepath)

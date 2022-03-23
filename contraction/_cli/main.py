@@ -48,8 +48,9 @@ def generate(data_dirpath: Path) -> None:
 @click.option('--graph-id', required=True)
 @click.option('--data', 'data_dirpath', type=ClickPath(exists=True, file_okay=False, resolve_path=True), required=True)
 @click.option('--display-steps/--no-display-steps', default=False)
+@click.option('--save-steps/--no-save-steps', default=False)
 @click.option('--from-json/--from-gml', default=False)
-def solve(graph_id: str, data_dirpath: Path, display_steps: bool, from_json: bool) -> None:
+def solve(graph_id: str, data_dirpath: Path, display_steps: bool, save_steps: bool, from_json: bool) -> None:
     if from_json:
         graph_filepath = data_dirpath / '_old' / 'old-graphs' / f'graph-{graph_id}.json'
         G = load_graph_from_json(graph_filepath)
@@ -70,9 +71,16 @@ def solve(graph_id: str, data_dirpath: Path, display_steps: bool, from_json: boo
         print(f"Processed in {end_time}s")
         return
 
-    if display_steps:
+    if display_steps or save_steps:
         display = Display(seed=0, iterations=250)
-        display.draw_graph_grid(G, solution, title=f"Graph: {graph_id}")
+        if display_steps:
+            display.draw_graph_grid(G, solution, title=f"Graph: {graph_id}")
+            display.show()
+        if save_steps:
+            display.draw_graph_grid(G, solution, title=f"Graph: {graph_id}")
+            solution_images_dirpath = data_dirpath / 'level-solution-images'
+            solution_image_filepath = solution_images_dirpath / f'solution-{graph_id}.png'
+            display.save(solution_image_filepath)
 
 
 @cli.command(name='display')
@@ -105,14 +113,17 @@ def train(data_dirpath: Path, save: bool, plot: bool, n_epochs: int) -> None:
 @click.option('--data', 'data_dirpath', type=ClickPath(exists=True, file_okay=False, resolve_path=True), required=True)
 @click.option('--debug/--no-debug', default=False)
 @click.option('--group', type=int, default=None)
-def convert(data_dirpath: Path, debug: bool, group: Optional[int]) -> None:
+@click.option('--level', type=int, default=None)
+def convert(data_dirpath: Path, debug: bool, group: Optional[int], level: Optional[int]) -> None:
     images_dirpath = data_dirpath / 'level-images'
     graphs_dirpath = data_dirpath / 'level-graphs'
     debug_dirpath = data_dirpath / 'level-debug' if debug else None
-    groups = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14] if group is None else [group]
+    groups = range(1, 14) if group is None else [group]
+    levels = range(1, 6) if level is None else [level]
     for group in groups:
-        for level in [1, 2, 3, 4, 5, 6]:
+        for level in levels:
             graph_id = make_graph_id(group, level)
-            print(graph_id)
+            print(f"Converting graph {graph_id}")
             G = convert_image(graph_id, images_dirpath, debug_dirpath)
-            save_graph(G, graph_id, graphs_dirpath, zip_graph=False)
+            if G is not None:
+                save_graph(G, graph_id, graphs_dirpath, zip_graph=False)
