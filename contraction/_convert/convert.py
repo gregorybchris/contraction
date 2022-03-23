@@ -35,6 +35,7 @@ def _rename_graph_nodes(G: nx.Graph):
 
 def _simplify_graph(G: nx.Graph) -> None:
     nodes = [node for node in G]
+    max_contractions = G.graph['contractions']
     for node in nodes:
         if node in G:
             size_1 = len(G)
@@ -44,6 +45,7 @@ def _simplify_graph(G: nx.Graph) -> None:
                 ops.contract(G, contraction, mutate=True)
                 size_2 = size_1
                 size_1 = len(G)
+    G.graph['contractions'] = max_contractions
 
 
 def _get_node_id(row: int, col: int):

@@ -1,6 +1,7 @@
 import click
 import time
 from pathlib import Path
+from typing import Optional
 
 from contraction._convert.convert import convert_image, save_graph
 from contraction._convert.graph_id import make_graph_id
@@ -61,8 +62,13 @@ def solve(graph_id: str, data_dirpath: Path, display_steps: bool, from_json: boo
     start_time = time.time()
     solution = solver.solve(G, graph_id)
     end_time = time.time() - start_time
-    print(f"Solution: {solution}")
-    print(f"Processed in {end_time}s")
+    if solution is not None:
+        print(f"Solution: {solution}")
+        print(f"Processed in {end_time}s")
+    else:
+        print("No solution found")
+        print(f"Processed in {end_time}s")
+        return
 
     if display_steps:
         display = Display(seed=0, iterations=250)
@@ -98,11 +104,13 @@ def train(data_dirpath: Path, save: bool, plot: bool, n_epochs: int) -> None:
 @cli.command()
 @click.option('--data', 'data_dirpath', type=ClickPath(exists=True, file_okay=False, resolve_path=True), required=True)
 @click.option('--debug/--no-debug', default=False)
-def convert(data_dirpath: Path, debug: bool) -> None:
+@click.option('--group', type=int, default=None)
+def convert(data_dirpath: Path, debug: bool, group: Optional[int]) -> None:
     images_dirpath = data_dirpath / 'level-images'
     graphs_dirpath = data_dirpath / 'level-graphs'
     debug_dirpath = data_dirpath / 'level-debug' if debug else None
-    for group in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]:
+    groups = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14] if group is None else [group]
+    for group in groups:
         for level in [1, 2, 3, 4, 5, 6]:
             graph_id = make_graph_id(group, level)
             print(graph_id)
