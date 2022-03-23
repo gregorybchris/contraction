@@ -89,7 +89,7 @@ class Display:
             G = contract(G, contraction)
 
         subplot_id = (grid_rows, grid_cols, self._figure_count + 1)
-        plt.subplot(*subplot_id, title=f"Step {self._figure_count + 1}: Solved")
+        plt.subplot(*subplot_id, title="Solved")
         self._draw_graph(G, pos=pos)
 
         plt.tight_layout()

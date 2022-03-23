@@ -7,8 +7,7 @@ import numpy as np
 
 from contraction._solve import ops
 from contraction._solve.color import Color
-from contraction._convert.puzzle_metadata import (get_max_contractions, get_n_colors, get_needs_mask,
-                                                  get_n_node_solution)
+from contraction._convert.puzzle_metadata import (get_max_contractions, get_n_colors, get_n_node_solution)
 
 HAS_PILLOW = True
 try:
@@ -286,10 +285,6 @@ def convert_image(graph_id: str, images_dirpath: Path, debug_dirpath: Optional[P
     box_radius = image.size[0] // 100
     samples = _get_samples(image_array, centers, box_radius=box_radius)
     mask = _get_mask(image_array, centers, box_radius=box_radius)
-
-    # if get_needs_mask(graph_id):
-    #     print("Solution with mask not yet supported")
-    #     return None
 
     labels = _get_labels(samples, n_colors, mask)
     color_map = _get_color_map(samples, labels, mask)

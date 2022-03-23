@@ -57,34 +57,6 @@ def get_n_colors(graph_id: str) -> int:
     return n_colors[group - 1][level - 1]
 
 
-def get_needs_mask(graph_id: str) -> bool:
-    group, level = parse_graph_id(graph_id)
-    needs_mask = [
-        [False, False, False, False, False, False],
-        [False, False, False, False, False, False],
-        [False, False, False, False, False, False],
-        [False, False, False, False, False, False],
-        [False, False, False, False, False, False],
-        [False, False, False, False, False, False],
-        [False, False, False, False, False, False],
-        [False, False, False, False, False, False],
-        [False, True, True, True, True, True],
-        [False, True, True, True, True, True],
-        [True, True, True, True, True, True],
-        [True, True, True, True, True, True],
-        [True, True, True, True, True, True],
-        [True, True, True, True, True, True],
-        [True, True, False, False, False, False],
-        [False, False, False, False, False, False],
-        [False, False, False, True, True, True],
-    ]
-    if level < 1 or level > len(needs_mask[0]):
-        raise ValueError(f"No mask metadata for level {level}")
-    if group < 1 or group > len(needs_mask):
-        raise ValueError(f"No mask metadata for group {group}")
-    return needs_mask[group - 1][level - 1]
-
-
 def get_n_node_solution(graph_id: str) -> int:
     group, level = parse_graph_id(graph_id)
     multinode_solution = [
