@@ -23,7 +23,7 @@ class Color(Enum):
             cls.ORANGE: '#e67e22',
             cls.PINK: '#ff7979',
             cls.PURPLE: '#8e44ad',
-            cls.RED: '#e74c3c',
+            cls.RED: '#e84118',
             cls.YELLOW: '#f1c40f',
         }
         if color in hex_map:
@@ -40,7 +40,7 @@ class Color(Enum):
             cls.ORANGE: (230, 126, 34),
             cls.PINK: (253, 121, 168),
             cls.PURPLE: (155, 89, 182),
-            cls.RED: (231, 76, 60),
+            cls.RED: (232, 65, 24),
             cls.YELLOW: (241, 196, 15),
         }
         if color in rgb_map:

@@ -44,23 +44,32 @@ def contract(G: nx.Graph, contraction: Contraction, mutate: bool = False) -> nx.
     return G
 
 
-def get_markov_blanket(G: nx.Graph, node: str) -> List[str]:
+def _iter_markov_blanket(G: nx.Graph, node: str) -> Iterator[str]:
     markov_blanket = set()
+
     markov_blanket.add(node)
+    yield node
+
     for child_node in G[node]:
-        markov_blanket.add(node)
+        if child_node not in markov_blanket:
+            yield child_node
+        markov_blanket.add(child_node)
         for grandchild_node in G[child_node]:
+            if grandchild_node not in markov_blanket:
+                yield grandchild_node
             markov_blanket.add(grandchild_node)
-    return list(markov_blanket)
 
 
-def get_nodes(G: nx.Graph, markov_root: Optional[str] = None) -> List[str]:
+def _iter_nodes(G: nx.Graph, markov_root: Optional[str] = None) -> Iterator[str]:
     if markov_root is None:
-        return list(G)
-    return get_markov_blanket(G, markov_root)
+        for node in G:
+            yield node
+    else:
+        for node in _iter_markov_blanket(G, markov_root):
+            yield node
 
 
-def order_nodes_by_centrality(G: nx.Graph, nodes: List[str], power: int = 2) -> List[str]:
+def _order_nodes_by_centrality(G: nx.Graph, nodes: Iterator[str], power: int = 2) -> List[str]:
     scores = {}
     queue = Queue()
     for node in nodes:
@@ -80,33 +89,41 @@ def order_nodes_by_centrality(G: nx.Graph, nodes: List[str], power: int = 2) -> 
     return list(sorted_nodes)
 
 
-def order_nodes_by_degree(G: nx.Graph, nodes: List[str]) -> List[str]:
+def _order_nodes_by_degree(G: nx.Graph, nodes: Iterator[str]) -> List[str]:
     scores = [(node, len(G[node])) for node in nodes]
     sorted_scores = sorted(scores, key=lambda x: -x[1])
     sorted_nodes, _ = zip(*sorted_scores)
     return list(sorted_nodes)
 
 
-def iter_contractions(G: nx.Graph, last_contraction: Optional[Contraction] = None) -> Iterator[Contraction]:
+def iter_contractions(
+    G: nx.Graph,
+    last_contraction: Optional[Contraction] = None,
+    order_by: Optional[str] = None,
+) -> Iterator[Contraction]:
     markov_root = None if last_contraction is None else last_contraction[0]
-    nodes = get_nodes(G, markov_root=markov_root)
-    nodes = order_nodes_by_centrality(G, nodes)
+    nodes = _iter_nodes(G, markov_root=markov_root)
+    if order_by == 'centrality':
+        nodes = _order_nodes_by_centrality(G, nodes)
+    elif order_by == 'degree':
+        nodes = _order_nodes_by_degree(G, nodes)
 
     for node in nodes:
-        for color in iter_neighbor_colors(G, node):
+        for color in _iter_neighbor_colors(G, node):
             if color != G.nodes[node]['color']:
                 yield node, color
 
 
-def order_contractions_by_graph_size(G: nx.Graph, contractions: List[Contraction]) -> List[Contraction]:
+def order_contractions_by_graph_size(
+    G: nx.Graph,
+    contractions: List[Contraction],
+) -> List[Tuple[Contraction, nx.Graph]]:
     contracted_graphs = []
     for contraction in contractions:
         contracted = contract(G, contraction)
-        contracted_graphs.append((contracted, contraction))
+        contracted_graphs.append((contraction, contracted))
 
-    sorted_graphs = sorted(contracted_graphs, key=lambda x: len(x[0]))
-    _, contractions = zip(*sorted_graphs)
-    return contractions
+    return list(sorted(contracted_graphs, key=lambda x: len(x[1])))
 
 
 def order_contractions_with_model(
@@ -129,7 +146,7 @@ def order_contractions_with_model(
     return list(zip(sorted_contractions, sorted_contracted))
 
 
-def iter_neighbor_colors(G: nx.Graph, node: str) -> Iterator[str]:
+def _iter_neighbor_colors(G: nx.Graph, node: str) -> Iterator[str]:
     color_set = set()
     for child_node in G[node]:
         color = G.nodes[child_node]['color']
@@ -138,7 +155,7 @@ def iter_neighbor_colors(G: nx.Graph, node: str) -> Iterator[str]:
             yield color
 
 
-def get_neighbor_colors_by_freq(G: nx.Graph, node: str) -> List[str]:
+def _get_neighbor_colors_by_freq(G: nx.Graph, node: str) -> List[str]:
     frequencies = {}
     for child_node in G[node]:
         color = G.nodes[child_node]['color']

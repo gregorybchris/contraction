@@ -41,15 +41,13 @@ class Solver:
         if ops.get_n_non_singular_colors(G) > max_contractions:
             return None
 
-        contractions = list(ops.iter_contractions(G, last_contraction=last_contraction))
+        contractions = ops.iter_contractions(G, last_contraction=last_contraction, order_by='centrality')
+        # contractions = ops.order_contractions_by_graph_size(G, contractions)
+        # contractions = ops.order_contractions_with_model(G, contractions, self._model)
+        # for contraction, contracted in contractions:
 
-        contractions = ops.order_contractions_by_graph_size(G, contractions)
         for contraction in contractions:
             contracted = ops.contract(G, contraction)
-
-            # contractions = ops.order_contractions_with_model(G, contractions, self._model)
-            # for contraction, contracted in contractions:
-
             child_solution = self._solve(contracted, graph_id, contraction)
             if child_solution is not None:
                 solution = child_solution.push_front(contraction)
