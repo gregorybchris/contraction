@@ -16,9 +16,15 @@ class Solver:
         self._solutions_dirpath = solutions_dirpath
         self._zip_graphs = zip_graphs
 
+        self._model = self._load_model(solutions_dirpath)
+
+    def _load_model(self, solutions_dirpath: Optional[Path]):
+        if solutions_dirpath is None:
+            raise ValueError("Must pass solutions_dirpath to load model")
         model_filepath = solutions_dirpath.parent / 'models' / 'model.pt'
-        self._model = ContractionModel(len(Color))
-        self._model.load_state_dict(torch.load(model_filepath))
+        model = ContractionModel(len(Color))
+        model.load_state_dict(torch.load(model_filepath))
+        return model
 
     def solve(self, G: nx.Graph, graph_id: str) -> Optional[List[Contraction]]:
         solution = self._solve(G, graph_id, None)
@@ -42,11 +48,11 @@ class Solver:
             return None
 
         contractions = ops.iter_contractions(G, last_contraction=last_contraction, order_by='centrality')
-        # contractions = ops.order_contractions_by_graph_size(G, contractions)
-        # contractions = ops.order_contractions_with_model(G, contractions, self._model)
-        # for contraction, contracted in contractions:
+        # contractions = ops.iter_contractions_by_graph_size(G, contractions)
+        # contractions = ops.iter_contractions_with_model(G, contractions, self._model)
 
         for contraction in contractions:
+            # for contraction, contracted in contractions:
             contracted = ops.contract(G, contraction)
             child_solution = self._solve(contracted, graph_id, contraction)
             if child_solution is not None:

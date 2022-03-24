@@ -69,7 +69,7 @@ def _iter_nodes(G: nx.Graph, markov_root: Optional[str] = None) -> Iterator[str]
             yield node
 
 
-def _order_nodes_by_centrality(G: nx.Graph, nodes: Iterator[str], power: int = 2) -> List[str]:
+def _iter_nodes_by_centrality(G: nx.Graph, nodes: Iterator[str], power: int = 2) -> Iterator[str]:
     scores = {}
     queue = Queue()
     for node in nodes:
@@ -84,29 +84,35 @@ def _order_nodes_by_centrality(G: nx.Graph, nodes: Iterator[str], power: int = 2
                 for child_node in G[current_node]:
                     queue.put((child_node, distance + 1))
         scores[node] = score
-    sorted_scores = sorted(scores.items(), key=lambda x: x[1])
-    sorted_nodes, _ = zip(*sorted_scores)
-    return list(sorted_nodes)
+    for node, _ in sorted(scores.items(), key=lambda x: x[1]):
+        yield node
 
 
-def _order_nodes_by_degree(G: nx.Graph, nodes: Iterator[str]) -> List[str]:
+def _iter_nodes_by_degree(G: nx.Graph, nodes: Iterator[str]) -> Iterator[str]:
     scores = [(node, len(G[node])) for node in nodes]
-    sorted_scores = sorted(scores, key=lambda x: -x[1])
-    sorted_nodes, _ = zip(*sorted_scores)
-    return list(sorted_nodes)
+    for node, _ in sorted(scores, key=lambda x: -x[1]):
+        yield node
 
 
 def iter_contractions(
     G: nx.Graph,
     last_contraction: Optional[Contraction] = None,
     order_by: Optional[str] = None,
+    contraction_nodes: Optional[List[str]] = None,
 ) -> Iterator[Contraction]:
     markov_root = None if last_contraction is None else last_contraction[0]
     nodes = _iter_nodes(G, markov_root=markov_root)
+    if contraction_nodes is not None:
+        nodes = [node for node in contraction_nodes if node in G]
+
+    if order_by is None:
+        pass
     if order_by == 'centrality':
-        nodes = _order_nodes_by_centrality(G, nodes)
+        nodes = _iter_nodes_by_centrality(G, nodes)
     elif order_by == 'degree':
-        nodes = _order_nodes_by_degree(G, nodes)
+        nodes = _iter_nodes_by_degree(G, nodes)
+    else:
+        raise ValueError("Invalid order_by type")
 
     for node in nodes:
         for color in _iter_neighbor_colors(G, node):
@@ -114,23 +120,24 @@ def iter_contractions(
                 yield node, color
 
 
-def order_contractions_by_graph_size(
+def iter_contractions_by_graph_size(
     G: nx.Graph,
-    contractions: List[Contraction],
-) -> List[Tuple[Contraction, nx.Graph]]:
+    contractions: Iterator[Contraction],
+) -> Iterator[Tuple[Contraction, nx.Graph]]:
     contracted_graphs = []
     for contraction in contractions:
         contracted = contract(G, contraction)
         contracted_graphs.append((contraction, contracted))
 
-    return list(sorted(contracted_graphs, key=lambda x: len(x[1])))
+    for pair in sorted(contracted_graphs, key=lambda x: len(x[1])):
+        yield pair
 
 
-def order_contractions_with_model(
+def iter_contractions_with_model(
     G: nx.Graph,
-    contractions: List[Contraction],
+    contractions: Iterator[Contraction],
     model: ContractionModel,
-) -> List[Tuple[Contraction, nx.Graph]]:
+) -> Iterator[Tuple[Contraction, nx.Graph]]:
     model.eval()
     predictions = []
     for contraction in contractions:
@@ -141,9 +148,9 @@ def order_contractions_with_model(
         data = ContractionDataset.graph_to_data(contracted)
         prediction = model(data)
         predictions.append((contraction, prediction, contracted))
-    sorted_predictions = sorted(predictions, key=lambda x: x[1])
-    sorted_contractions, _, sorted_contracted = zip(*sorted_predictions)
-    return list(zip(sorted_contractions, sorted_contracted))
+
+    for contraction, _, contracted in sorted(predictions, key=lambda x: x[1]):
+        yield contraction, contracted
 
 
 def _iter_neighbor_colors(G: nx.Graph, node: str) -> Iterator[str]:
@@ -155,7 +162,7 @@ def _iter_neighbor_colors(G: nx.Graph, node: str) -> Iterator[str]:
             yield color
 
 
-def _get_neighbor_colors_by_freq(G: nx.Graph, node: str) -> List[str]:
+def _get_neighbor_colors_by_freq(G: nx.Graph, node: str) -> Iterator[str]:
     frequencies = {}
     for child_node in G[node]:
         color = G.nodes[child_node]['color']
@@ -163,9 +170,8 @@ def _get_neighbor_colors_by_freq(G: nx.Graph, node: str) -> List[str]:
             frequencies[color] = 0
         frequencies[color] += 1
 
-    sorted_frequencies = sorted(frequencies.items(), key=lambda x: -x[1])
-    sorted_nodes, _ = zip(*sorted_frequencies)
-    return list(sorted_nodes)
+    for node, _ in sorted(frequencies.items(), key=lambda x: -x[1]):
+        yield node
 
 
 def get_n_non_singular_colors(G: nx.Graph) -> int:

@@ -61,6 +61,8 @@ class Display:
         contractions: List[Contraction],
         title: Optional[str] = None,
     ) -> None:
+        self._figure_count = 0
+
         n_contractions = len(contractions)
         grid_rows = 2 if n_contractions > 1 else 1
         grid_cols = math.ceil((n_contractions + 1) / grid_rows)
@@ -82,7 +84,8 @@ class Display:
         for contraction in contractions:
             node, color = contraction
             subplot_id = (grid_rows, grid_cols, self._figure_count + 1)
-            plt.subplot(*subplot_id, title=f"Step {self._figure_count + 1}: ({node}) {arrow} {color}")
+            title = f"Step {self._figure_count + 1}: ({node}) {arrow} {color}"
+            plt.subplot(*subplot_id, title=title)
             highlight_edges = self._get_highlight_edges(G, contraction)
             pos = self._draw_graph(G, pos=pos, highlight_edges=highlight_edges)
             self._figure_count += 1
