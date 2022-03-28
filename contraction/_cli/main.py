@@ -22,29 +22,6 @@ def cli() -> None:
 
 
 @cli.command()
-@click.option('--data', 'data_dirpath', type=ClickPath(exists=True, file_okay=False, resolve_path=True), required=True)
-def generate(data_dirpath: Path) -> None:
-    solutions_dirpath = data_dirpath / 'solutions'
-    solver = Solver(solutions_dirpath, zip_graphs=False)
-    for group in [1, 2, 3, 4, 5, 6, 7, 8]:
-        for level in [1, 2, 3, 4, 5, 6]:
-            graph_id = f'{group}-{level}'
-            print("\nProcessing graph: ", graph_id)
-
-            graph_filepath = data_dirpath / 'level-graphs' / f'graph-{graph_id}.gml'
-            G = load_graph_from_gml(graph_filepath)
-
-            graph_filepath = data_dirpath / 'level-graphs' / f'graph-{graph_id}.gml'
-            G = load_graph_from_gml(graph_filepath)
-
-            start_time = time.time()
-            solution = solver.solve(G, graph_id)
-            end_time = time.time() - start_time
-            print(f"Solution: {solution}")
-            print(f"Processed in {end_time}s")
-
-
-@cli.command()
 @click.option('--graph-id', required=True)
 @click.option('--data', 'data_dirpath', type=ClickPath(exists=True, file_okay=False, resolve_path=True), required=True)
 @click.option('--display-steps/--no-display-steps', default=False)
