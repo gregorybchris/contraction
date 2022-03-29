@@ -107,12 +107,12 @@ def iter_contractions(
 
     if order_by is None:
         pass
-    if order_by == 'centrality':
+    elif order_by == 'centrality':
         nodes = _iter_nodes_by_centrality(G, nodes)
     elif order_by == 'degree':
         nodes = _iter_nodes_by_degree(G, nodes)
     else:
-        raise ValueError("Invalid order_by type")
+        raise ValueError(f"Invalid order_by type {order_by}")
 
     for node in nodes:
         for color in _iter_neighbor_colors(G, node):
