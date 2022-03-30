@@ -11,8 +11,8 @@ except ImportError:
 
 
 @functools.lru_cache
-def _download_font(font_url: str) -> io.BytesIO:
-    return io.BytesIO(request.urlopen(font_url).read())
+def _download_font(font_url: str) -> bytes:
+    return request.urlopen(font_url).read()
 
 
 class Font(Enum):
@@ -30,5 +30,6 @@ class Font(Enum):
     @classmethod
     def pillow(cls, font: 'Font', *args, **kwargs) -> ImageFont:
         url = cls._get_url(font)
-        with _download_font(url) as f:
+        font_data = _download_font(url)
+        with io.BytesIO(font_data) as f:
             return ImageFont.truetype(f, *args, **kwargs, layout_engine=ImageFont.LAYOUT_BASIC)
