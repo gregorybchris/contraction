@@ -25,30 +25,39 @@ def convert_image(graph_id: str, images_dirpath: Path, debug_dirpath: Optional[P
         print(f"Solution with {n_node_solution} nodes not yet supported")
         return None
 
-    image_filename = f'kami-{graph_id}.png'
-    image_filepath = images_dirpath / image_filename
+    image_filepath = images_dirpath / f'kami-{graph_id}.png'
+    print(f"Reading input image {image_filepath}")
     image = Image.open(image_filepath)
+    image_array = np.asarray(image)
 
     n_colors = get_n_colors(graph_id)
     max_contractions = get_max_contractions(graph_id)
 
-    image_array = np.asarray(image)
+    box_radius = image.size[0] // 100
+    normalizer_image_array = np.asarray(Image.open(images_dirpath / 'kami-1-1.png'))
 
     centers = utils.get_centers(image.size)
-    box_radius = image.size[0] // 100
-    samples = utils.get_samples(image_array, centers, box_radius=box_radius)
-    mask = utils.get_mask(image_array, centers, box_radius=box_radius)
-
+    mask = utils.get_mask(image_array, centers, box_radius)
+    samples = utils.get_samples(image_array, centers, box_radius)
+    samples = utils.normalize_samples(samples, centers, normalizer_image_array, box_radius)
     labels = utils.get_labels(samples, n_colors, mask)
     color_map = utils.get_color_map(samples, labels, mask)
 
     G = utils.construct_graph(labels, color_map, max_contractions, mask)
     utils.simplify_graph(G)
-    utils.rename_graph_nodes(G)
 
     if debug_dirpath is not None:
         debug_image = get_debug_image(G, image_array, labels, centers, color_map, box_radius, mask)
-        save_debug_image(debug_image, debug_dirpath, graph_id)
+
+        debug_image_filepath = debug_dirpath / f'kami-{graph_id}-debug.png'
+        debug_image.save(debug_image_filepath)
+        print(f"Debug image saved to {debug_image_filepath}")
+
+        debug_image_filepath = debug_dirpath / f'kami-{graph_id}-color-debug.png'
+        debug_image = Image.fromarray(samples, mode='RGB')
+        debug_image = debug_image.resize([d * 20 for d in debug_image.size], resample=Image.BOX)
+        debug_image.save(debug_image_filepath)
+        print(f"Debug image saved to {debug_image_filepath}")
 
     return G
 
@@ -91,10 +100,3 @@ def get_debug_image(
         image_draw.text(center, node, fill=(0, 0, 0), font=font)
 
     return image
-
-
-def save_debug_image(image: Image, debug_dirpath: Path, graph_id: str):
-    filename = f'kami-{graph_id}-debug.png'
-    filepath = debug_dirpath / filename
-    print(f"Debug image saved to {filepath}")
-    image.save(filepath)

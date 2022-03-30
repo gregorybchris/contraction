@@ -20,13 +20,6 @@ class ConvertConstants:
     N_RGB = 3
 
 
-def rename_graph_nodes(G: nx.Graph):
-    nodes = [node for node in G]
-    sorted_nodes = sorted(nodes, key=lambda x: int(x))
-    for i, node in enumerate(sorted_nodes):
-        nx.relabel_nodes(G, {node: str(i)}, copy=False)
-
-
 def simplify_graph(G: nx.Graph) -> None:
     nodes = [node for node in G]
     max_contractions = G.graph['contractions']
@@ -40,6 +33,15 @@ def simplify_graph(G: nx.Graph) -> None:
                 size_2 = size_1
                 size_1 = len(G)
     G.graph['contractions'] = max_contractions
+
+    _rename_graph_nodes(G)
+
+
+def _rename_graph_nodes(G: nx.Graph):
+    nodes = [node for node in G]
+    sorted_nodes = sorted(nodes, key=lambda x: int(x))
+    for i, node in enumerate(sorted_nodes):
+        nx.relabel_nodes(G, {node: str(i)}, copy=False)
 
 
 def _get_node_id(row: int, col: int):
@@ -92,7 +94,7 @@ def get_color_map(samples: np.ndarray, labels: np.ndarray, mask: np.ndarray) -> 
                 closest_dist = sys.maxsize
                 for color in Color:
                     if color not in colors_used:
-                        dist = _color_dist(sample, color)
+                        dist = _color_dist(sample, Color.to_rgb(color))
                         if dist < closest_dist:
                             closest_dist = dist
                             closest_color = color
@@ -103,11 +105,10 @@ def get_color_map(samples: np.ndarray, labels: np.ndarray, mask: np.ndarray) -> 
     return color_map
 
 
-def _color_dist(color_a: np.ndarray, color_b: Color) -> float:
-    color_b_rgb = Color.to_rgb(color_b)
-    dr = color_a[0] - color_b_rgb[0]
-    dg = color_a[1] - color_b_rgb[1]
-    db = color_a[2] - color_b_rgb[2]
+def _color_dist(color_a: np.ndarray, color_b: np.ndarray) -> float:
+    dr = color_a[0] - color_b[0]
+    dg = color_a[1] - color_b[1]
+    db = color_a[2] - color_b[2]
     return np.sqrt(dr**2 + dg**2 + db**2)
 
 
@@ -150,27 +151,26 @@ def get_centers(image_size: Tuple[int, int]) -> np.ndarray:
     return centers
 
 
-def get_samples(image_array: np.ndarray, centers: np.ndarray, box_radius: int = 3) -> np.ndarray:
-    samples = np.zeros((ConvertConstants.N_ROWS, ConvertConstants.N_COLS, ConvertConstants.N_RGB))
+def get_samples(image_array: np.ndarray, centers: np.ndarray, box_radius: int) -> np.ndarray:
+    samples = np.zeros((ConvertConstants.N_ROWS, ConvertConstants.N_COLS, ConvertConstants.N_RGB), dtype=np.uint8)
     for row in range(ConvertConstants.N_ROWS):
         for col in range(ConvertConstants.N_COLS):
             x, y = centers[row, col]
-            sample = _take_sample(image_array, x, y, box_radius)
-            samples[row, col, :] = sample
+            samples[row, col, :] = _take_sample(image_array, x, y, box_radius)
     return samples
 
 
-def _take_sample(image_array: np.ndarray, x: int, y: int, radius: int) -> Tuple[int, int, int]:
+def _take_sample(image_array: np.ndarray, x: int, y: int, radius: int) -> np.ndarray:
     total = np.zeros(ConvertConstants.N_RGB, dtype=int)
     n_pixels = 0
     for r in range(-radius, radius + 1):
         for c in range(-radius, radius + 1):
             n_pixels += 1
             total += image_array[y + r, x + c]
-    return tuple(total // n_pixels)
+    return (total // n_pixels).astype(np.uint8)
 
 
-def get_mask(image_array: np.ndarray, centers: np.ndarray, box_radius: int = 3) -> np.ndarray:
+def get_mask(image_array: np.ndarray, centers: np.ndarray, box_radius: int) -> np.ndarray:
     mask = np.ones((ConvertConstants.N_ROWS, ConvertConstants.N_COLS), dtype=bool)
     roughness_threshold = 50.0
     for row in range(ConvertConstants.N_ROWS):
@@ -229,3 +229,44 @@ def color_box(image_array: np.ndarray, x: int, y: int, radius: int, color: Color
     for r in range(-radius, radius):
         for c in range(-radius, radius):
             image_array[y + r, x + c] = Color.to_rgb(color)
+
+
+def normalize_samples(
+    samples: np.ndarray,
+    centers: np.ndarray,
+    normalizer_image_array: np.ndarray,
+    box_radius: int,
+) -> np.ndarray:
+    scaler = _get_brightness_scaler(normalizer_image_array, centers, box_radius)
+    samples = np.clip(samples + scaler, 0, 255).astype(np.uint8)
+    return samples
+
+
+def _get_brightness_scaler(
+    normalizer_image_array: np.ndarray,
+    centers: np.ndarray,
+    box_radius: int,
+) -> np.ndarray:
+    samples = get_samples(normalizer_image_array, centers, box_radius)
+    rgb_weight = np.array([0.6, 0.3, 0.1])
+    unit_weight = np.array([1, 1, 1])
+
+    side_difference = 0
+
+    left = samples[:, :samples.shape[1] // 2, :]
+    left_mean = left.mean(axis=(0, 1))
+    left_brightness = (left_mean * rgb_weight).sum()
+
+    right = samples[:, samples.shape[1] // 2:, :]
+    right_mean = right.mean(axis=(0, 1))
+    right_brightness = (right_mean * rgb_weight).sum() - side_difference
+
+    scaler = np.zeros((ConvertConstants.N_ROWS, ConvertConstants.N_COLS, ConvertConstants.N_RGB))
+    for row in range(ConvertConstants.N_ROWS):
+        for col in range(ConvertConstants.N_COLS):
+            sample = samples[row, col]
+            sample_brightness = (sample * rgb_weight).sum()
+            side_brightness = left_brightness if col < ConvertConstants.N_COLS // 2 else right_brightness
+            scaler[row, col] = (side_brightness - sample_brightness) * unit_weight
+
+    return scaler
