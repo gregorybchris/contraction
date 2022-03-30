@@ -4,7 +4,7 @@ from typing import Dict, Optional
 import networkx as nx
 import numpy as np
 
-from contraction._convert.puzzle_metadata import get_max_contractions, get_n_colors
+from contraction._convert.graph_metadata import GraphMetadata
 from contraction._convert import convert_utils as utils
 from contraction._solve.color import Color
 from contraction._visual.font import Font
@@ -20,13 +20,12 @@ def convert_image(graph_id: str, images_dirpath: Path, debug_dirpath: Optional[P
     if not HAS_PILLOW:
         raise ImportError("Pillow is required to convert images to graphs")
 
-    image_filepath = images_dirpath / f'kami-{graph_id}.png'
+    image_filepath = images_dirpath / f'{graph_id}.png'
     print(f"Reading input image {image_filepath}")
     image = Image.open(image_filepath)
     image_array = np.asarray(image)
 
-    n_colors = get_n_colors(graph_id)
-    max_contractions = get_max_contractions(graph_id)
+    graph_metadata = GraphMetadata.get(graph_id)
 
     box_radius = image.size[0] // 100
     normalizer_image_array = np.asarray(Image.open(images_dirpath / 'kami-1-1.png'))
@@ -35,20 +34,20 @@ def convert_image(graph_id: str, images_dirpath: Path, debug_dirpath: Optional[P
     mask = utils.get_mask(image_array, centers, box_radius)
     samples = utils.get_samples(image_array, centers, box_radius)
     samples = utils.normalize_samples(samples, centers, normalizer_image_array, box_radius)
-    labels = utils.get_labels(samples, n_colors, mask)
+    labels = utils.get_labels(samples, graph_metadata.n_colors, mask)
     color_map = utils.get_color_map(samples, labels, mask)
 
-    G = utils.construct_graph(labels, color_map, max_contractions, mask)
+    G = utils.construct_graph(labels, color_map, graph_metadata.max_contractions, mask)
     utils.simplify_graph(G)
 
     if debug_dirpath is not None:
         debug_image = get_debug_image(G, image_array, labels, centers, color_map, box_radius, mask)
 
-        debug_image_filepath = debug_dirpath / f'kami-{graph_id}-debug.png'
+        debug_image_filepath = debug_dirpath / f'{graph_id}-debug.png'
         debug_image.save(debug_image_filepath)
         print(f"Debug image saved to {debug_image_filepath}")
 
-        debug_image_filepath = debug_dirpath / f'kami-{graph_id}-color-debug.png'
+        debug_image_filepath = debug_dirpath / f'{graph_id}-color-debug.png'
         samples[mask] = 0
         debug_image = Image.fromarray(samples, mode='RGB')
         debug_image = debug_image.resize([d * 20 for d in debug_image.size], resample=Image.BOX)

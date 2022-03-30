@@ -89,3 +89,4 @@ class Solver:
         }
         with solution_filepath.open(mode='w') as f:
             json.dump(solution_record, f, indent=2)
+        print(f"Saved partial solution to {solution_filepath}")
