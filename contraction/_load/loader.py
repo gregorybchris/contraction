@@ -6,10 +6,10 @@ import networkx as nx
 
 def load_graph(data_dirpath: Path, graph_id: str, from_json: bool = False) -> nx.Graph:
     if from_json:
-        graph_filepath = data_dirpath / '_old' / 'old-graphs' / f'graph-{graph_id}.json'
+        graph_filepath = data_dirpath / '_old' / 'old-graphs' / f'{graph_id}.json'
         return _load_graph_from_json(graph_filepath)
 
-    graph_filepath = data_dirpath / 'level-graphs' / f'graph-{graph_id}.gml'
+    graph_filepath = data_dirpath / 'level-graphs' / f'{graph_id}.gml'
     return _load_graph_from_gml(graph_filepath)
 
 

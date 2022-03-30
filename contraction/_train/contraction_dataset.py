@@ -1,6 +1,7 @@
 import json
 from pathlib import Path
 from typing import Iterator, Union
+from contraction._convert.graph_category import GraphCategory
 
 import networkx as nx
 from torch_geometric.data import Data, Dataset
@@ -29,18 +30,23 @@ class ContractionDataset(Dataset):
 
     def _iter_graph_filepaths(self) -> Iterator[Path]:
         for graph_dirpath in self._data_dirpath.iterdir():
-            graph_id = graph_dirpath.stem[6:]  # handle graph- filename
-            try:
-                _, graph_id_level = parse_graph_id(graph_id)
-            except ValueError:
+            graph_id = graph_dirpath.stem
+            category, group, level = parse_graph_id(graph_id)
+
+            if category != GraphCategory.KAMI:
                 continue
 
+            level, group = int(level), int(group)
+
             # Don't train on odd levels
-            if self._split == self.TRAIN_SPLIT and graph_id_level % 2 == 1:
+            if self._split == self.TRAIN_SPLIT and level % 2 == 1:
                 continue
 
             # Don't test on even levels
-            if self._split == self.TEST_SPLIT and graph_id_level % 2 == 0:
+            if self._split == self.TEST_SPLIT and level % 2 == 0:
+                continue
+
+            if group > 16:
                 continue
 
             for solution_filepath in graph_dirpath.iterdir():

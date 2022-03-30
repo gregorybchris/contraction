@@ -38,6 +38,7 @@ def convert_image(graph_id: str, images_dirpath: Path, debug_dirpath: Optional[P
     color_map = utils.get_color_map(samples, labels, mask)
 
     G = utils.construct_graph(labels, color_map, graph_metadata.max_contractions, mask)
+    utils.add_node_positions(G, mask)
     utils.simplify_graph(G)
 
     if debug_dirpath is not None:
@@ -54,12 +55,13 @@ def convert_image(graph_id: str, images_dirpath: Path, debug_dirpath: Optional[P
         debug_image.save(debug_image_filepath)
         print(f"Debug color image saved to {debug_image_filepath}")
 
+    utils.remove_node_positions(G)
     return G
 
 
 def save_graph(G: nx.Graph, graph_id: str, graphs_dirpath: Path, zip_graph: bool = True) -> None:
     extension = 'gml.gz' if zip_graph else 'gml'
-    output_filepath = graphs_dirpath / f'graph-{graph_id}.{extension}'
+    output_filepath = graphs_dirpath / f'{graph_id}.{extension}'
     print(f"Graph saved to {output_filepath}")
     nx.write_gml(G, output_filepath)
 

@@ -60,7 +60,7 @@ def construct_graph(labels: np.ndarray, color_map: Dict[int, Color], max_contrac
 
             color = color_map[label]
             node = _get_node_id(row, col)
-            G.add_node(node, color=color.value, position=(row, col))
+            G.add_node(node, color=color.value)
             even = (row + col) % 2 == 0
 
             if col > 0 and even and not mask[row, col - 1]:  # Left
@@ -76,6 +76,22 @@ def construct_graph(labels: np.ndarray, color_map: Dict[int, Color], max_contrac
                 G.add_edge(node, _get_node_id(row + 1, col))
 
     return G
+
+
+def add_node_positions(G: nx.Graph, mask: np.ndarray) -> None:
+    for row in range(ConvertConstants.N_ROWS):
+        for col in range(ConvertConstants.N_COLS):
+            if mask[row, col]:
+                continue
+            node = _get_node_id(row, col)
+            G.nodes[node]['position'] = (row, col)
+
+
+def remove_node_positions(G: nx.Graph) -> None:
+    for node in G:
+        data = G.nodes[node]
+        if 'position' in data:
+            del data['position']
 
 
 def get_color_map(samples: np.ndarray, labels: np.ndarray, mask: np.ndarray) -> Dict[int, Color]:

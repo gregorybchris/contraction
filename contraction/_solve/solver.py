@@ -70,7 +70,7 @@ class Solver:
 
         # Save graph data
         extension = 'gml.gz' if self._zip_graphs else 'gml'
-        solution_dirpath = self._solutions_dirpath / f'graph-{graph_id}'
+        solution_dirpath = self._solutions_dirpath / graph_id
         solution_dirpath.mkdir(exist_ok=True, parents=True)
         graph_filepath = solution_dirpath / f'graph-{graph_hash}.{extension}'
         nx.write_gml(G, graph_filepath)
