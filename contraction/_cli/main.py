@@ -6,6 +6,7 @@ from typing import Optional
 from contraction._cli.parsing import ClickPath
 from contraction._convert.convert import convert_image, save_graph
 from contraction._convert.graph_id import make_graph_id
+from contraction._convert.puzzle_metadata import get_n_node_solution
 from contraction._load.loader import load_graph
 from contraction._solve.solver import Solver
 from contraction._visual.display import Display
@@ -38,6 +39,11 @@ def solve(
         for level in levels:
             graph_id = make_graph_id(group, level)
             print(f"Solving graph {graph_id}")
+
+            n_node_solution = get_n_node_solution(graph_id)
+            if n_node_solution > 1:
+                print(f"Solution with {n_node_solution} nodes not yet supported")
+                return None
 
             G = load_graph(data_dirpath, graph_id, from_json=from_json)
 

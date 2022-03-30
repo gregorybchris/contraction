@@ -4,7 +4,7 @@ from typing import Dict, Optional
 import networkx as nx
 import numpy as np
 
-from contraction._convert.puzzle_metadata import (get_max_contractions, get_n_colors, get_n_node_solution)
+from contraction._convert.puzzle_metadata import get_max_contractions, get_n_colors
 from contraction._convert import convert_utils as utils
 from contraction._solve.color import Color
 from contraction._visual.font import Font
@@ -19,11 +19,6 @@ except ImportError:
 def convert_image(graph_id: str, images_dirpath: Path, debug_dirpath: Optional[Path]) -> Optional[nx.Graph]:
     if not HAS_PILLOW:
         raise ImportError("Pillow is required to convert images to graphs")
-
-    n_node_solution = get_n_node_solution(graph_id)
-    if n_node_solution > 1:
-        print(f"Solution with {n_node_solution} nodes not yet supported")
-        return None
 
     image_filepath = images_dirpath / f'kami-{graph_id}.png'
     print(f"Reading input image {image_filepath}")
@@ -54,10 +49,11 @@ def convert_image(graph_id: str, images_dirpath: Path, debug_dirpath: Optional[P
         print(f"Debug image saved to {debug_image_filepath}")
 
         debug_image_filepath = debug_dirpath / f'kami-{graph_id}-color-debug.png'
+        samples[mask] = 0
         debug_image = Image.fromarray(samples, mode='RGB')
         debug_image = debug_image.resize([d * 20 for d in debug_image.size], resample=Image.BOX)
         debug_image.save(debug_image_filepath)
-        print(f"Debug image saved to {debug_image_filepath}")
+        print(f"Debug color image saved to {debug_image_filepath}")
 
     return G
 
