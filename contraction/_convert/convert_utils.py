@@ -6,6 +6,7 @@ import numpy as np
 
 from contraction._solve import ops
 from contraction._solve.color import Color
+from contraction._convert.graph_metadata import GraphMetadata
 
 HAS_SKLEARN = True
 try:
@@ -48,8 +49,9 @@ def _get_node_id(row: int, col: int):
     return str(row * ConvertConstants.N_COLS + col)
 
 
-def construct_graph(labels: np.ndarray, color_map: Dict[int, Color], max_contractions: int, mask: np.ndarray):
-    G = nx.Graph(contractions=max_contractions)
+def construct_graph(labels: np.ndarray, color_map: Dict[int, Color], graph_metadata: GraphMetadata, mask: np.ndarray):
+
+    G = nx.Graph(contractions=graph_metadata.max_contractions, components=graph_metadata.n_components)
 
     for row in range(ConvertConstants.N_ROWS):
         for col in range(ConvertConstants.N_COLS):

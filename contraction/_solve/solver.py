@@ -36,15 +36,13 @@ class Solver:
         graph_id: str,
         last_contraction: Optional[Contraction],
     ) -> Optional[Solution]:
-        if len(G) == 1:
+        if ops.has_one_color(G):
             return Solution()
 
-        max_contractions = G.graph['contractions']
-
-        if ops.get_n_graph_colors(G) > max_contractions + 1:
+        if ops.get_n_graph_colors(G) > G.graph['contractions'] + 1:
             return None
 
-        if ops.get_n_non_singular_colors(G) > max_contractions:
+        if ops.get_n_non_singular_colors(G) > G.graph['contractions']:
             return None
 
         contractions = ops.iter_contractions(G, last_contraction=last_contraction, order_by='centrality')

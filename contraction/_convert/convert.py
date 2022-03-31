@@ -16,7 +16,7 @@ except ImportError:
     HAS_PILLOW = False
 
 
-def convert_image(graph_id: str, images_dirpath: Path, debug_dirpath: Optional[Path]) -> Optional[nx.Graph]:
+def convert_image(graph_id: str, images_dirpath: Path, debug_dirpath: Optional[Path]) -> nx.Graph:
     if not HAS_PILLOW:
         raise ImportError("Pillow is required to convert images to graphs")
 
@@ -37,7 +37,7 @@ def convert_image(graph_id: str, images_dirpath: Path, debug_dirpath: Optional[P
     labels = utils.get_labels(samples, graph_metadata.n_colors, mask)
     color_map = utils.get_color_map(samples, labels, mask)
 
-    G = utils.construct_graph(labels, color_map, graph_metadata.max_contractions, mask)
+    G = utils.construct_graph(labels, color_map, graph_metadata, mask)
     utils.add_node_positions(G, mask)
     utils.simplify_graph(G)
 

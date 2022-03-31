@@ -1,4 +1,4 @@
-category,group,level,max_contractions,n_colors,solution_n_nodes
+category,group,level,max_contractions,n_colors,n_components
 kami,1,1,1,2,1
 kami,1,2,2,3,1
 kami,1,3,2,3,1
@@ -119,3 +119,5 @@ daily,3,22,9,5,1
 daily,3,23,8,5,1
 challenge,x,1,6,5,1
 challenge,x,2,8,5,1
+user,x,1,7,5,1
+user,x,2,7,5,1

@@ -100,7 +100,10 @@ def iter_contractions(
     order_by: Optional[str] = None,
     contraction_nodes: Optional[List[str]] = None,
 ) -> Iterator[Contraction]:
+    # If the graph has more than one component we cannot rely on the markov blanket heuristic
+    last_contraction = last_contraction if G.graph['components'] == 1 else None
     markov_root = None if last_contraction is None else last_contraction[0]
+
     nodes = _iter_nodes(G, markov_root=markov_root)
     if contraction_nodes is not None:
         nodes = [node for node in contraction_nodes if node in G]
@@ -115,7 +118,8 @@ def iter_contractions(
         raise ValueError(f"Invalid order_by type {order_by}")
 
     for node in nodes:
-        for color in _iter_neighbor_colors(G, node):
+        colors = _iter_neighbor_colors(G, node) if last_contraction is not None else _iter_graph_colors(G)
+        for color in colors:
             if color != G.nodes[node]['color']:
                 yield node, color
 
@@ -189,6 +193,29 @@ def get_n_non_singular_colors(G: nx.Graph) -> int:
     return n_non_singular
 
 
+def _iter_graph_colors(G: nx.Graph) -> Iterator[str]:
+    color_set = set()
+    for node in G:
+        color = G.nodes[node]['color']
+        if color not in color_set:
+            color_set.add(color)
+            yield color
+
+
 def get_n_graph_colors(G: nx.Graph) -> int:
     graph_colors = {G.nodes[node_id]['color'] for node_id in G.nodes}
     return len(graph_colors)
+
+
+def has_one_color(G: nx.Graph) -> bool:
+    if len(G) == 1:
+        return True
+
+    graph_color = None
+    for node in G:
+        node_color = G.nodes[node]['color']
+        if graph_color is None:
+            graph_color = node_color
+        elif node_color != graph_color:
+            return False
+    return True

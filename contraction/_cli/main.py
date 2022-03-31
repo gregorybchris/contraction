@@ -38,8 +38,7 @@ def convert(
         graph_id = graph_metadata.graph_id
         print(f"Converting graph {graph_id}")
         G = convert_image(graph_id, images_dirpath, debug_dirpath)
-        if G is not None:
-            save_graph(G, graph_id, graphs_dirpath, zip_graph=False)
+        save_graph(G, graph_id, graphs_dirpath, zip_graph=False)
 
 
 @cli.command()
@@ -59,30 +58,26 @@ def solve(
     group: Optional[str],
     level: Optional[str],
 ) -> None:
+    solutions_dirpath = data_dirpath / 'solutions'
+    solver = Solver(solutions_dirpath, zip_graphs=False)
+
     for graph_metadata in GraphMetadata.iterator(category=category, group=group, level=level):
         graph_id = graph_metadata.graph_id
         print(f"Solving graph {graph_id}")
 
-        solution_n_nodes = graph_metadata.solution_n_nodes
-        if solution_n_nodes > 1:
-            print(f"Solution with {solution_n_nodes} nodes not yet supported")
-            return None
-
         G = load_graph(data_dirpath, graph_id, from_json=from_json)
 
-        solutions_dirpath = data_dirpath / 'solutions'
-        solver = Solver(solutions_dirpath, zip_graphs=False)
         start_time = time.time()
         solution = solver.solve(G, graph_id)
         end_time = time.time() - start_time
 
         if solution is None:
             print("No solution found")
-            print(f"Processed in {end_time}s")
-            return
+            print(f"Processed in {end_time:.3f}s")
+            continue
 
         print(f"Solution: {solution}")
-        print(f"Processed in {end_time}s")
+        print(f"Processed in {end_time:.3f}s")
 
         if display_steps or save_steps:
             display = Display(seed=0, iterations=250)
@@ -112,4 +107,5 @@ def display_graph(graph_id: str, data_dirpath: Path, from_json: bool) -> None:
 @click.option('--plot/--no-plot', default=True)
 @click.option('--epochs', 'n_epochs', default=100)
 def train(data_dirpath: Path, save: bool, plot: bool, n_epochs: int) -> None:
+    print(f"Training contraction model with {n_epochs} epochs...")
     train_model(data_dirpath, save, plot, n_epochs)

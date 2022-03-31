@@ -13,13 +13,13 @@ class GraphMetadata:
         graph_id: str,
         max_contractions: int,
         n_colors: int,
-        solution_n_nodes: int,
+        n_components: int,
     ):
         self.graph_id = graph_id
         self.category, self.group, self.level = parse_graph_id(graph_id)
         self.max_contractions = max_contractions
         self.n_colors = n_colors
-        self.solution_n_nodes = solution_n_nodes
+        self.n_components = n_components
 
     @classmethod
     def get(cls, graph_id: str) -> 'GraphMetadata':
