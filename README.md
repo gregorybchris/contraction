@@ -3,7 +3,7 @@
   <h1>Contraction</h1>
 
   <p>
-    <strong>Graph contraction prediction using graph neural networks</strong>
+    <strong>Graph neural networks for contraction prediction</strong>
   </p>
 
   <hr />
