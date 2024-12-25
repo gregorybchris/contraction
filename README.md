@@ -15,16 +15,22 @@ An _edge contraction_ is a graph operation where an edge is deleted and its two 
 
 The goal of this project is to implement an efficient search over graph contractions such that an arbitrary graph can be contracted down to a single vertex in as few operations as possible.
 
-Heuristics like centrality, node degree, and [Markov constraints](#Markov-Constraints) can speed up the search considerably. However, for very large graphs with many vertices and many colors brute force search quickly becomes intractable. However, humans are able to solve these puzzles fairly quickly with visual intuition and very shallow backtracking search. This disparity feeds the intuition that a deep learning approach may yield better performance.
-
-## Methods
-
-To guide search we embed the graph using a graph convolutional network (specifically `GCNConv` from [PyTorch Geometric](https://pytorch-geometric.readthedocs.io)). This architecture allows us to train on graphs of arbitrary shape and size - though we restrict this dataset to planar graphs. In practice, global max pooling improves training stability and leads to faster convergence. Graph attention layers did not seem to provide an advantage over simple graph convolutions, but this may still be a future direction worth pursuing. A final linear layer maps the graph embedding to the predicted value, which estimates the minimum number of contractions needed to fully contract the graph. This estimate is used as a search heuristic, as a replacement for centrality and node degree.
-
-Each iteration of the model-based beam search we embed all candidate graphs, estimate their likelihood of requiring few contractions, and use those estimates to rank candidates. Monte Carlo tree search would be an interesting future direction to pursue.
+Heuristics like centrality, node degree, and [Markov constraints](#Markov-Constraints) can speed up the search considerably. However, for very large graphs with many vertices and many colors brute force search quickly becomes intractable. Despite this combinatorial explosion, humans are able to solve large puzzles fairly quickly with visual intuition and very shallow backtracking search. This disparity feeds the intuition that a deep learning approach may yield better performance.
 
 <div align="center">
   <img src="assets/contraction.png" width="500">
+</div>
+
+## Methods
+
+To guide search we embed the graph using a graph convolutional network (specifically `GCNConv` from [PyTorch Geometric](https://pytorch-geometric.readthedocs.io)). This architecture allows us to train on graphs of arbitrary shape and size. In practice, global max pooling improves training stability and leads to faster convergence. Graph attention layers did not seem to provide an advantage over simple graph convolutions, but this may still be a future direction worth pursuing.
+
+A final linear layer maps the graph embedding to the predicted value, which estimates the minimum number of contractions needed to fully contract the graph. This estimate is used as a search heuristic, replacing centrality and node degree. Each iteration of the model-based beam search we embed all candidate graphs, estimate their likelihood of requiring few contractions, and use those estimates to rank candidates.
+
+We train with MSE loss and also calculate an accuracy score by rounding the model prediction to the nearest integer number of contractions. Training was done on a single consumer-grade GPU.
+
+<div align="center">
+  <img src="assets/loss-curve.png" width="400">
 </div>
 
 ## Installation
@@ -40,10 +46,6 @@ poetry install
 ```bash
 poetry run ctn train --data <data-dirpath> --save --plot --epochs 100
 ```
-
-<div align="center">
-  <img src="assets/loss-curve.png" width="400">
-</div>
 
 ## Discussion
 
