@@ -3,7 +3,7 @@
   <h1>Contraction</h1>
 
   <p>
-    <strong>Graph neural networks for contraction prediction</strong>
+    <strong>Graph neural networks for efficient tree search</strong>
   </p>
 
   <hr />
