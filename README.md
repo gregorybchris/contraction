@@ -15,7 +15,7 @@ An _edge contraction_ is a graph operation where an edge is deleted and its two 
 
 The goal of this project is to implement an efficient search over graph contractions such that an arbitrary graph can be contracted down to a single vertex in as few operations as possible.
 
-Heuristics like centrality, node degree, and [Markov constraints](#Markov-Constraints) can speed up the search considerably. However, for very large graphs with many vertices and many colors brute force search quickly becomes intractable. Despite this combinatorial explosion, humans are able to solve large puzzles fairly quickly with visual intuition and very shallow backtracking search. This disparity feeds the intuition that a deep learning approach may yield better performance.
+Heuristics like centrality, node degree, and [Markov constraints](#Markov-Constraints) can speed up the search considerably. However, for very large graphs with many vertices and many colors brute force search quickly becomes intractable (even with ordering heuristics). Despite this combinatorial explosion, humans are able to solve large puzzles fairly quickly with visual intuition and very shallow backtracking search. This disparity feeds the intuition that a deep learning approach may yield better performance.
 
 <div align="center">
   <img src="assets/contraction.png" width="500">
