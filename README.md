@@ -15,7 +15,7 @@ An _edge contraction_ is a graph operation where an edge is deleted and its two 
 
 The goal of this project is to implement an efficient search over graph contractions such that an arbitrary graph can be contracted down to a single vertex in as few operations as possible.
 
-Heuristics like centrality, node degree, and [Markov constraints](#Markov-Constraints) can speed up the search considerably. However, for very large graphs with many vertices and many colors brute force search quickly becomes intractable (even with ordering heuristics). Despite this combinatorial explosion, humans are able to solve large puzzles fairly quickly with visual intuition and very shallow backtracking search. This disparity feeds the intuition that a deep learning approach may yield better performance.
+Heuristics like centrality, node degree, and [Markov constraints](#markov-constraints) can speed up the search considerably. However, for very large graphs with many vertices and many colors brute force search quickly becomes intractable (even with ordering heuristics). Despite this combinatorial explosion, humans are able to solve large puzzles fairly quickly with visual intuition and very shallow backtracking search. This gap in performance informs the hypothesis that a deep learning approach may yield better heuristics and faster search.
 
 <div align="center">
   <img src="assets/contraction.png" width="500">
@@ -23,7 +23,7 @@ Heuristics like centrality, node degree, and [Markov constraints](#Markov-Constr
 
 ## Methods
 
-To guide search we embed the graph using a graph convolutional network (specifically `GCNConv` from [PyTorch Geometric](https://pytorch-geometric.readthedocs.io)). This architecture allows us to train on graphs of arbitrary shape and size. In practice, global max pooling improves training stability and leads to faster convergence. Graph attention layers did not seem to provide an advantage over simple graph convolutions, but this may still be a future direction worth pursuing.
+To guide search we first embed the graph using a graph convolutional network (specifically `GCNConv` from [PyTorch Geometric](https://pytorch-geometric.readthedocs.io)). This architecture allows us to train on graphs of arbitrary shape and size. In practice, global max pooling improves training stability and leads to faster convergence. Graph attention layers did not seem to provide an advantage over simple graph convolutions, but this may still be a future direction worth pursuing.
 
 A final linear layer maps the graph embedding to the predicted value, which estimates the minimum number of contractions needed to fully contract the graph. This estimate is used as a search heuristic, replacing centrality and node degree. Each iteration of the model-based beam search we embed all candidate graphs, estimate their likelihood of requiring few contractions, and use those estimates to rank candidates.
 
